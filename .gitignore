@@ -1,0 +1,4 @@
+*.o
+dt
+target
+.vscode
