@@ -3,8 +3,6 @@
 #include <types.h>
 #include <virtio/virtio.h>
 
-
-
 //! acutally these metadata should be gotten from the config area.
 //! we simply hardcore them here.
 
@@ -64,46 +62,46 @@
 #define MMIO_CONFIG_OFFST 0x100
 
 #define READ_MMIO_REG(base, offset, type) (*(volatile type *)(base + offset))
-#define WRITE_MMIO_REG(base, offset, type,value) ({ *(volatile size_t *)(base + offset) = value; })
-
+#define WRITE_MMIO_REG(base, offset, type, value)                              \
+  ({ *(volatile size_t *)(base + offset) = value; })
 
 struct virtio_blk_config {
-	le64 capacity;
-	le32 size_max;
-	le32 seg_max;
-	struct virtio_blk_geometry {
-		le16 cylinders;
-		u8 heads;
-		u8 sectors;
-	} geometry;
-	le32 blk_size;
-	struct virtio_blk_topology {
-		u8 physical_block_exp;
-		u8 alignment_offset;
-		le16 min_io_size;
-		le32 opt_io_size;
-	} topology;
-	u8 writeback;
-	u8 unused0;
-	u16 num_queues;
-	le32 max_discard_sectors;
-	le32 max_discard_seg;
-	le32 discard_sector_alignment;
-	le32 max_write_zeroes_sectors;
-	le32 max_write_zeroes_seg;
-	u8 write_zeroes_may_unmap;
-	u8 unused1[3];
-	le32 max_secure_erase_sectors;
-	le32 max_secure_erase_seg;
-	le32 secure_erase_sector_alignment;
+  le64 capacity;
+  le32 size_max;
+  le32 seg_max;
+  struct virtio_blk_geometry {
+    le16 cylinders;
+    u8 heads;
+    u8 sectors;
+  } geometry;
+  le32 blk_size;
+  struct virtio_blk_topology {
+    u8 physical_block_exp;
+    u8 alignment_offset;
+    le16 min_io_size;
+    le32 opt_io_size;
+  } topology;
+  u8 writeback;
+  u8 unused0;
+  u16 num_queues;
+  le32 max_discard_sectors;
+  le32 max_discard_seg;
+  le32 discard_sector_alignment;
+  le32 max_write_zeroes_sectors;
+  le32 max_write_zeroes_seg;
+  u8 write_zeroes_may_unmap;
+  u8 unused1[3];
+  le32 max_secure_erase_sectors;
+  le32 max_secure_erase_seg;
+  le32 secure_erase_sector_alignment;
 };
 
 struct virtio_blk_req {
-	le32 type;
-	le32 reserved;
-	le64 sector;
-	u8 *data;
-	u8 status;
+  le32 type;
+  le32 reserved;
+  le64 sector;
+  u8 *data;
+  u8 status;
 };
 
 #define VIRTIO_BLK_T_IN 0
@@ -116,18 +114,18 @@ struct virtio_blk_req {
 #define VIRTIO_BLK_T_SECURE_ERASE 14
 
 struct virtio_blk_discard_write_zeroes {
-	le64 sector;
-	le32 num_sectors;
-	struct {
-		le32 unmap : 1;
-		le32 reserved : 31;
-	} flags;
+  le64 sector;
+  le32 num_sectors;
+  struct {
+    le32 unmap : 1;
+    le32 reserved : 31;
+  } flags;
 };
 
 struct virtio_blk_lifetime {
-	le16 pre_eol_info;
-	le16 device_lifetime_est_typ_a;
-	le16 device_lifetime_est_typ_b;
+  le16 pre_eol_info;
+  le16 device_lifetime_est_typ_a;
+  le16 device_lifetime_est_typ_b;
 };
 
 #define VIRTIO_BLK_PRE_EOL_INFO_UNDEFINED 0
@@ -141,7 +139,9 @@ struct virtio_blk_lifetime {
 
 void virtio_blk_init(size_t base);
 
-void virtio_blk_read_sectors(size_t base, size_t sector, size_t count, void *buf);
-void virtio_blk_write_sectors(size_t base,size_t sector, size_t count, void *buf);
+void virtio_blk_read_sectors(size_t base, size_t sector, size_t count,
+                             void *buf);
+void virtio_blk_write_sectors(size_t base, size_t sector, size_t count,
+                              void *buf);
 
 #endif // __VIRTIO_BLK_H__

@@ -10,7 +10,6 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-
 #define ACKNOWLEDGE 0x1
 #define DRIVER 0x2
 #define FAILED 0x80

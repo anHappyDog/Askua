@@ -1,8 +1,8 @@
 #ifndef __PGTABLE_H_
 #define __PGTABLE_H_
 #include <errors.h>
-#include <types.h>
 #include <mm/page.h>
+#include <types.h>
 typedef uint64_t pgd_t;
 typedef uint64_t pmd_t;
 typedef uint64_t pte_t;

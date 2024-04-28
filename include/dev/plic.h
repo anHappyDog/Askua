@@ -8,11 +8,10 @@
 #define SIFIVE_INT_PRI_BASE 0x0
 #define SIFIVE_INT_PENDING_BASE 0x1000
 #define SIFIVE_INT_ENABLE_BASE 0x2000
-#define SIFIVE_INT_PRI_THRESHOLD_BASE  0x200000
+#define SIFIVE_INT_PRI_THRESHOLD_BASE 0x200000
 #define SIFIVE_INT_PRI_CLAIM_BASE 0x200004
 
 #define SIFIVE_INT_NUM 1024
-
 
 #define SIFIVE_ENABLE_CONTEXT_BLOCK_SIZE 0x80
 #define SIFIVE_BASE_SIZE 0x600000
@@ -22,6 +21,6 @@
 
 void plic_init(size_t base, size_t size);
 uint32_t plic_claim(size_t base, size_t context);
-void plic_complete(size_t base, size_t context,uint32_t irq);
+void plic_complete(size_t base, size_t context, uint32_t irq);
 
 #endif // __PLIC_H__
