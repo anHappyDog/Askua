@@ -1,6 +1,3 @@
 #include <fs.h>
 
-
-void fs_init() {
-    
-}
+void fs_init() {}
