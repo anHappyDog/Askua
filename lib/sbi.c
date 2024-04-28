@@ -48,7 +48,16 @@ struct sbiret sbi_hart_wakeup(size_t hartid) {
 }
 
 struct sbiret inline sbi_set_timer(size_t stime_value) {
-  struct sbiret ret = {0, 0};
+  struct sbiret ret;
+  asm volatile("mv a0, %1\n"
+               "li a7, %2\n"
+               "li a1, 0\n"
+               "li a2, 0\n"
+               "ecall\n"
+               "mv %0, a0"
+               : "=r"(ret.error)
+               : "r"(stime_value), "i"(SBI_SET_TIMER)
+               : "a0", "a7", "gp");
   return ret;
 }
 
@@ -70,4 +79,11 @@ void sbi_shutdown(void) {
                "ecall\n"
                :
                : "i"(SBI_SHUTDOWN));
+}
+
+void sbi_clear_ipi(void) {
+  asm volatile("li a7, %0\n"
+               "ecall\n"
+               :
+               : "i"(SBI_CLEAR_IPI));
 }

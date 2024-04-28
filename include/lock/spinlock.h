@@ -2,7 +2,7 @@
 #define __SPINLOCK_H_
 #include <asm/barrier.h>
 #include <atomic.h>
-
+#include <trap.h>
 typedef struct {
   atomic_t lock;
 } spinlock_t;

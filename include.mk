@@ -1,6 +1,6 @@
 ARCH        ?= riscv64
 VERSION     ?= debug
-MODULES     := boot mm lib kernel dev
+MODULES     := boot mm lib kernel dev trap
 TARGET_DIR  := ./target
 DT_DIR      := ./dt
 LD_DIR      := ./tool/lds

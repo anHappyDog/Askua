@@ -53,8 +53,6 @@ struct sbiret {
   size_t value;
 };
 
-struct sbiret sbi_call(size_t, size_t, size_t, size_t);
-
 // legacy
 struct sbiret sbi_set_timer(size_t stime_value);
 
@@ -70,5 +68,5 @@ struct sbiret sbi_hart_suspend(size_t suspend_type, size_t resume_addr,
 struct sbiret sbi_hart_wakeup(size_t hartid);
 
 void sbi_shutdown(void);
-
+void sbi_clear_ipi(void);
 #endif

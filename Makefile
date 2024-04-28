@@ -9,7 +9,7 @@ SYMTABLE			:= $(TARGET_DIR)/askua.sym
 
 export CC CFLAGS LD LDFLAGS
 
-all: $(TARGET_ELF)
+all: clean $(TARGET_ELF)
 
 
 $(TARGET_DIR):
