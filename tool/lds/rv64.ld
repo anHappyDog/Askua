@@ -3,6 +3,7 @@ ENTRY(_start)
 
 HIDDEN(KERNEL_ENTRY_ADDR = 0x80200000);
 HIDDEN(STACK_SIZE = 0x40000);
+HIDDEN(RAW_SIZE = 0x20000);
 SECTIONS {
     . = KERNEL_ENTRY_ADDR;
     __skernel = .;
@@ -35,6 +36,12 @@ SECTIONS {
     __ebss = .;
     . += 4K;
 
+    .raw (NOLOAD) : {
+    __sraw = .;
+    . += RAW_SIZE;
+    __eraw = .;
+    }
+    
     .stack (NOLOAD) : {
         __sstack = .;
         . += STACK_SIZE;

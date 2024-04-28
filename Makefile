@@ -1,11 +1,11 @@
 include include.mk
 
 TARGET_ELF 			:= $(TARGET_DIR)/askua.elf
+SYMTABLE			:= $(TARGET_DIR)/askua.sym	
 
 
 
-
-.PHONY: clean run $(MODULES) all
+.PHONY: clean run $(MODULES) all $(SYMTABLE)
 
 export CC CFLAGS LD LDFLAGS
 
@@ -16,10 +16,10 @@ $(TARGET_DIR):
 	mkdir -p $@
 
 $(MODULES):
-	echo "Building $@"
 	$(MAKE) --directory=$@
 	
-
+$(SYMTABLE): $(TARGET_ELF)
+	$(OBJCOPY) --only-keep-debug $(TARGET_ELF) $@
 
 $(TARGET_ELF): $(MODULES) $(TARGET_DIR)
 	$(LD) $(LDFLAGS) -o $(TARGET_ELF) $(foreach module, $(MODULES), $(wildcard $(module)/*.o))
@@ -46,5 +46,5 @@ objdump:$(TARGET_ELF)
 dbg-run:
 	$(QEMU) -kernel $(TARGET_ELF) $(QEMU_FLAGS) -S -s
 
-dbg:
-	$(GDB) -ex "file $(TARGET_ELF)"  -ex "target remote :1234"
+dbg: $(SYMTABLE)
+	$(GDB) -ex "file $(TARGET_ELF)"  -ex "target remote :1234" -ex "add-symbol-file $(SYMTABLE) 0xFFFFFFF080200000"

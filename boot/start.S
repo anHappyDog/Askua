@@ -1,5 +1,5 @@
 .section .text._boot,"ax",%progbits
-.globl _start
+.global _start
 _start:
     mv gp,a0
     la sp, __estack
