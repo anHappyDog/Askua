@@ -8,6 +8,8 @@ mpaging_t mpging = {
     .lock = 0,
 };
 
+extern size_t raw_heap_alloc(size_t size, size_t align);
+
 error_t mm_paging(size_t mem_base, size_t mem_size) {
   mpging.pm_base = mem_base;
   mpging.pm_size = mem_size;

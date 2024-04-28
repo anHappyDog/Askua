@@ -2,6 +2,7 @@
 #define __PAGE_H_
 #include <atomic.h>
 #include <errors.h>
+#include <lib/string.h>
 #include <list.h>
 #include <lock/spinlock.h>
 
