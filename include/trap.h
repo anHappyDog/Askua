@@ -32,9 +32,9 @@
 
 #define SSTATUS_SIE 0x02
 
-void trap_init(void);
+void enable_trap(void);
 
-inline void enable_irq();
-inline u8 is_irq_enabled();
-inline void disable_irq();
+void enable_irq();
+u8 is_irq_enabled();
+void disable_irq();
 #endif // __TRAP_H__

@@ -13,6 +13,7 @@ typedef int32_t i32;
 typedef int64_t i64;
 
 typedef uint64_t size_t;
+typedef unsigned long ulong;
 
 #define ROUNDDOWN(a, n) ((a) / (n) * (n))
 #define ROUNDUP(a, n) (((a) + (n)-1) / (n) * (n))

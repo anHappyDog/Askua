@@ -20,7 +20,9 @@
 #define GOLD_FISH_RTC_INT 0xb
 
 void plic_init(size_t base, size_t size);
-uint32_t plic_claim(size_t base, size_t context);
-void plic_complete(size_t base, size_t context, uint32_t irq);
+u32 plic_claim(size_t context);
+void plic_complete(size_t context, u32 irq);
+void plic_turn_um(void);
+void plic_turn_mm(void);
 
 #endif // __PLIC_H__

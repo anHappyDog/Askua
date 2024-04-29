@@ -1,4 +1,6 @@
 #include <asm/csr.h>
+#include <dev/plic.h>
+#include <dev/rtc.h>
 #include <dev/uart.h>
 #include <mm/mm.h>
 #include <mm/pgtable.h>
@@ -87,6 +89,12 @@ error_t kmapping(size_t mem_addr, size_t mem_size) {
   panic_on(kmapping_va2pa(kpgd, NS16550A_UART_BASE, NS16550A_UART_BASE,
                           PAGE_SIZE, PTE_R | PTE_W),
            "kmapping_va2pa failed");
+  panic_on(kmapping_va2pa(kpgd, SIFIVE_BASE_ADDR, SIFIVE_BASE_ADDR,
+                          SIFIVE_BASE_SIZE, PTE_R | PTE_W),
+           "kmapping_va2pa failed");
+  panic_on(kmapping_va2pa(kpgd, GOLDFISH_RTC_BASE, GOLDFISH_RTC_BASE,
+                          GOLDFISH_RTC_SIZE, PTE_R | PTE_W),
+           "kmapping_va2pa failed");
 
   panic_on(kmapping_va2pa(kpgd, ssbi, ssbi, esbi - ssbi, PTE_R | PTE_W),
            "kmapping_va2pa failed");
@@ -107,11 +115,14 @@ error_t kmapping(size_t mem_addr, size_t mem_size) {
                           PTE_R | PTE_W),
            "kmapping_va2pa failed");
 
-  kpgd[VA_PGD_INDEX(VIRTUAL_KERNEL_BASE)] = kpgd[0] | PTE_V;
-  kpgd[VA_PGD_INDEX(VIRTUAL_KERNEL_BASE) + 1] = kpgd[1] | PTE_V;
-  kpgd[VA_PGD_INDEX(VIRTUAL_KERNEL_BASE) + 2] = kpgd[2] | PTE_V;
+  kpgd[VA_PGD_INDEX(VIRTUAL_KERNEL_BASE)] = kpgd[0];
+  kpgd[VA_PGD_INDEX(VIRTUAL_KERNEL_BASE) + 1] = kpgd[1];
+  kpgd[VA_PGD_INDEX(VIRTUAL_KERNEL_BASE) + 2] = kpgd[2];
   write_satp(((size_t)kpgd >> PAGE_SHIFT) | SATP_SV39_MODE);
   uart_mm_mapped();
+  plic_turn_mm();
+  rtc_turn_mm();
+
   printk("kmapping done\n");
   return E_OK;
 }

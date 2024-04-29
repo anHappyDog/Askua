@@ -1,5 +1,6 @@
-#include <dev/plic.h>
 #include <asm/csr.h>
+#include <dev/plic.h>
+#include <dev/rtc.h>
 #include <dev/uart.h>
 #include <mm/mm.h>
 #include <printk.h>
@@ -15,17 +16,22 @@ void _init(size_t hartid, void *dtbptr) {
     _is_inited = 1;
     master_hartid = SMP_GET_HARTID();
     uart_init();
-    raw_heap_init();
+    rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
     plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
-    mm_master(0x80000000, 0x80000000);
-    trap_init();
+    raw_heap_init();
+    mm_master(0x80000000, 0x10000000);
+    enable_trap();
     sbi_set_timer(0x1000000 + read_time());
-    printk("master hartid = %d\n", master_hartid);  
+    printk("alarm is %016lx,alarm status is %x\n", rtc_read_alarm(),
+           rtc_alarm_status());
+    printk("master hartid = %d,time is %016lx\n", master_hartid,
+           rtc_read_time());
     while (1)
       ;
   } else {
+
     mm_slave();
-    trap_init();
+    enable_trap();
     printk("slave hartid = %d\n", hartid);
     sbi_set_timer(0x1000000 + read_time());
     while (1)
