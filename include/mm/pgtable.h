@@ -2,8 +2,8 @@
 #define __PGTABLE_H_
 #include <errors.h>
 #include <lib/string.h>
-#include <mm/page.h>
 #include <mm/mmu.h>
+#include <mm/page.h>
 #include <types.h>
 
 typedef uint64_t pgd_t;

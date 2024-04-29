@@ -41,15 +41,19 @@ struct mpaging {
 };
 
 struct pb_operations_struct {
-  error_t (*alloc_init)(page_t* free_pages,size_t npages);
+  error_t (*alloc_init)(page_t *free_pages, size_t npages);
   size_t (*alloc_pb)(size_t order);
   error_t (*free_pb)(size_t addr, size_t order);
   size_t (*alloc_pb_zeroed)(size_t order);
-  page_t* free_pages;
-  size_t free_base; //virtual address
+  page_t *free_pages;
+  size_t free_base; // virtual address
 };
 
 typedef struct mpaging mpaging_t;
+
+
+#define PAGE_VA_TO_PA(va) ((va) & ~VIRTUAL_KERNEL_BASE)
+
 
 error_t mm_paging(size_t mem_base, size_t mem_size);
 

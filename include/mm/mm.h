@@ -44,6 +44,11 @@
                "ret\n" ::"r"(VIRTUAL_KERNEL_BASE)                              \
                : "memory");
 
+#define TLB_FLUSH_ALL asm volatile("sfence.vma zero, zero\n" ::: "memory");
+
+#define TLB_FLUSH(va, asid)                                                    \
+  asm volatile("sfence.vma %0, %1\n" ::"r"(va), "r"(asid) : "memory");
+
 // raw.c
 size_t raw_heap_alloc(size_t size, size_t align);
 void raw_heap_init(void);

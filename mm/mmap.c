@@ -127,8 +127,71 @@ error_t kmapping(size_t mem_addr, size_t mem_size) {
   return E_OK;
 }
 
-error_t map_va(pgd_t *pgdir, size_t va, size_t size, size_t perm) {
+error_t map_va_pte(pte_t *pte, size_t va, size_t sz, size_t perm) {
+  size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(va, PAGE_SIZE);
+  size_t mapped_sz = 0, nm_sz = 0;
+  size_t eva = ROUNDUP(va + sz, PAGE_SIZE);
+  size_t start = VA_PTE_INDEX(ROUNDDOWN(sva, PAGE_SIZE)),
+         end = VA_PTE_INDEX(ROUNDUP(eva, PAGE_SIZE)), ind = 0;
+  for (ind = start; ind < end; ++ind) {
+    pte[ind] = PA_TO_PTE(alloc_pages(0)) | perm | PTE_V;
+  }
   return E_OK;
 }
 
-error_t unmap_va(pgd_t *pgdir, size_t va, size_t size) { return E_OK; }
+error_t map_va_pmd(pmd_t *pmdir, size_t va, size_t sz, size_t perm) {
+  size_t pmd_sz = 1 << PMD_SHIFT;
+  size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(va, PAGE_SIZE);
+  size_t mapped_sz = 0, nm_sz = 0;
+  size_t eva = ROUNDUP(va + sz, PAGE_SIZE);
+  size_t start = VA_PMD_INDEX(ROUNDDOWN(sva, pmd_sz)),
+         end = VA_PMD_INDEX(ROUNDUP(eva, pmd_sz)), ind = 0;
+  for (ind = start; ind < end; ++ind) {
+    if (!(pmdir[ind] & PTE_V)) {
+      pmdir[ind] = PA_TO_PMD(alloc_pages(0)) | PTE_V;
+    }
+    pte_t *pte = (pte_t *)PMD_TO_PA(pmdir[ind]);
+    nm_sz = mapped_sz + pmd_sz < sz ? pmd_sz : sz - mapped_sz;
+    panic_on(map_va_pte(pte, sva, nm_sz, perm), "map_va_pte failed");
+    mapped_sz += nm_sz;
+    sva += nm_sz;
+  }
+  return E_OK;
+}
+
+error_t map_va(pgd_t *pgdir, size_t va, size_t sz, size_t perm) {
+  size_t sva = ROUNDDOWN(va, PAGE_SIZE), eva = ROUNDUP(va + sz, PAGE_SIZE);
+  size_t mapped_sz = 0, nm_sz = 0, pgd_sz = 1 << PGD_SHIFT;
+  size_t start = VA_PGD_INDEX(ROUNDDOWN(sva, pgd_sz)),
+         end = VA_PGD_INDEX(ROUNDUP(eva, pgd_sz)), ind = 0;
+  for (ind = start; ind < end; ++ind) {
+    if (!(pgdir[ind] & PTE_V)) {
+      pgdir[ind] = PA_TO_PGD(PAGE_VA_TO_PA(alloc_pages(0))) | PTE_V;
+    }
+    pmd_t *pmd = (pmd_t *)PGD_TO_PA(pgdir[ind]);
+    nm_sz = mapped_sz + pgd_sz < sz ? pgd_sz : sz - mapped_sz;
+    panic_on(map_va_pmd(pmd, sva, nm_sz, perm), "map_va_pmd failed");
+    mapped_sz += nm_sz;
+    sva += nm_sz;
+  }
+  return E_OK;
+}
+
+error_t unmap_va(pgd_t *pgdir, size_t va, size_t size) {
+  size_t sva = ROUNDDOWN(va, PAGE_SIZE), eva = ROUNDUP(va + size, PAGE_SIZE);
+  for (; sva < eva; sva += PAGE_SIZE) {
+    size_t pgd_ind = VA_PGD_INDEX(sva), pmd_ind = VA_PMD_INDEX(sva),
+           pte_ind = VA_PTE_INDEX(sva);
+    pmd_t *pmd = (pmd_t *)PGD_TO_PA(pgdir[pgd_ind]);
+    if (!(pmd[pmd_ind] & PTE_V)) {
+      return E_INVAL;
+    }
+    pte_t *pte = (pte_t *)PMD_TO_PA(pmd[pmd_ind]);
+    if (!(pte[pte_ind] & PTE_V)) {
+      return E_INVAL;
+    }
+    free_pages(PTE_TO_PA(pte[pte_ind]), 0);
+    pte[pte_ind] = 0;
+  }
+  return E_OK;
+}

@@ -81,9 +81,9 @@ static error_t buddy_alloc_init(page_t *free_pages, size_t npages) {
   for (i = BUDDY_MAX_ORDER - 1; i >= 0; --i) {
     pb_descs[i].total_count = npages * pb_descs[i].petion / 100;
     for (j = 0; j < pb_descs[i].total_count; ++j) {
-        free_pages->p_flags = PAGE_FREE;
-        list_add_tail(&free_pages->pb_list, &pb_descs[i].pb_list);
-        free_pages+= pb_descs[i].nr_pages;
+      free_pages->p_flags = PAGE_FREE;
+      list_add_tail(&free_pages->pb_list, &pb_descs[i].pb_list);
+      free_pages += pb_descs[i].nr_pages;
     }
   }
   return E_OK;
