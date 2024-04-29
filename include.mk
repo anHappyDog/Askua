@@ -5,7 +5,7 @@ TARGET_DIR  := ./target
 DT_DIR      := ./dt
 LD_DIR      := ./tool/lds
 INC_DIR     := include
-MEMORY      := 256
+MEMORY      := 512
 CORE        ?= 4
 
 ifeq ($(ARCH), riscv64)

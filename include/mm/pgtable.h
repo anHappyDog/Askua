@@ -3,6 +3,7 @@
 #include <errors.h>
 #include <lib/string.h>
 #include <mm/page.h>
+#include <mm/mmu.h>
 #include <types.h>
 
 typedef uint64_t pgd_t;
@@ -52,8 +53,6 @@ typedef uint64_t pte_t;
 #define PGD_TO_PA(va) (((va) >> PERM_BTIS) << PAGE_SHIFT)
 #define PMD_TO_PA(va) (((va) >> PERM_BTIS) << PAGE_SHIFT)
 #define PTE_TO_PA(va) (((va) >> PERM_BTIS) << PAGE_SHIFT)
-
-#define VIRTUAL_KERNEL_BASE 0xFFFFFFF000000000UL
 
 error_t kmapping(size_t mem_addr, size_t mem_size);
 

@@ -10,9 +10,7 @@ SECTIONS {
     __stext = .;
     .text : {
         *(.text._boot)
-        __sexcept = .;
         *(.text.exc_gen_entry);
-        __eexcept = .;
         *(.text .text.*)
 
     }

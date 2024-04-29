@@ -29,6 +29,7 @@ void mm_master(size_t mem_base, size_t mem_size) {
   slave_core_jumper =
       (void (*)(void))((size_t)mv_sc_to_hs | VIRTUAL_KERNEL_BASE);
   master_core_jumper(master_hartid);
+
   RESTORE_MM_MASTER_STACK
 }
 

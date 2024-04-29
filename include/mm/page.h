@@ -5,6 +5,7 @@
 #include <lib/string.h>
 #include <list.h>
 #include <lock/spinlock.h>
+#include <mm/mmu.h>
 
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1 << PAGE_SHIFT)
@@ -19,10 +20,11 @@ struct page {
   // used for muti-contiguous-page allocating.
   // see the first page in the 'block' as a node.
   // only the node page are in it.
-  struct list_head free_block_list;
+  struct list_head pb_list;
   // used to link
-  struct list_head page_list;
+  struct list_head p_list;
   atomic_t p_ref;
+  size_t p_virtaddr;
   size_t p_physaddr;
   uint32_t p_flags;
   size_t p_nr; // number
@@ -35,12 +37,22 @@ struct mpaging {
   size_t pm_size;
   page_t *pages;
   size_t npages;
+  struct pb_operations_struct *pb_ops;
+};
 
-  spinlock_t lock;
+struct pb_operations_struct {
+  error_t (*alloc_init)(page_t* free_pages,size_t npages);
+  size_t (*alloc_pb)(size_t order);
+  error_t (*free_pb)(size_t addr, size_t order);
+  size_t (*alloc_pb_zeroed)(size_t order);
+  page_t* free_pages;
+  size_t free_base; //virtual address
 };
 
 typedef struct mpaging mpaging_t;
 
 error_t mm_paging(size_t mem_base, size_t mem_size);
 
+size_t alloc_pages(size_t order);
+error_t free_pages(size_t addr, size_t order);
 #endif // __PAGE_H_

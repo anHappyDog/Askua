@@ -126,3 +126,9 @@ error_t kmapping(size_t mem_addr, size_t mem_size) {
   printk("kmapping done\n");
   return E_OK;
 }
+
+error_t map_va(pgd_t *pgdir, size_t va, size_t size, size_t perm) {
+  return E_OK;
+}
+
+error_t unmap_va(pgd_t *pgdir, size_t va, size_t size) { return E_OK; }
