@@ -1,9 +1,9 @@
-.section .text._boot, "ax", %progbits
+.section .boot._start, "ax", %progbits
 .global _start
 _start: 
     mv gp, a0
-    la sp,__estack
-    li t0, 0x10000
+    li sp,0x80204000
+    li t0, 0x1000
     mul t0, t0, gp
     sub sp, sp, t0
-    j _init
+    j _preinit

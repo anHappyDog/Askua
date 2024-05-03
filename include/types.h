@@ -17,4 +17,14 @@ typedef unsigned long ulong;
 
 #define ROUNDDOWN(a, n) ((a) / (n) * (n))
 #define ROUNDUP(a, n) (((a) + (n)-1) / (n) * (n))
+
+#define __PREINIT__(x) __attribute__((section(".boot" #x)))
+#define __NORETURN__ __attribute__((noreturn))
+#define __ALWAYS_INLINE__ __attribute__((always_inline))
+#define __PACKED__ __attribute__((packed))
+#define __WEAK__ __attribute__((weak))
+#define __SECTION__(x) __attribute__((section(#x)))
+#define __ALIGN(x) __attribute__((aligned(x)))
+#define __DEADLOOP__ while(1);
+
 #endif

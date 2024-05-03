@@ -54,6 +54,5 @@ typedef uint64_t pte_t;
 #define PMD_TO_PA(va) (((va) >> PERM_BTIS) << PAGE_SHIFT)
 #define PTE_TO_PA(va) (((va) >> PERM_BTIS) << PAGE_SHIFT)
 
-error_t kmapping(size_t mem_addr, size_t mem_size);
 
 #endif // __PGTABLE_H_

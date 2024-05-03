@@ -8,33 +8,42 @@
 #include <smp.h>
 #include <trap.h>
 
-static u8 _is_inited = 0;
-u32 master_hartid = 0;
+extern void __PREINIT__(.pmm) kpre_mapping(void);
+extern error_t __SECTION__(.text.kmmap) kmapping(size_t mem_addr, size_t mem_size);
 
-void _init(size_t hartid, void *dtbptr) {
-  if (!_is_inited) {
-    _is_inited = 1;
-    master_hartid = SMP_GET_HARTID();
-    uart_init();
-    rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
-    plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
-    raw_heap_init();
-    mm_master(0x80000000, 0x10000000);
-    enable_trap();
-    sbi_set_timer(0x1000000 + read_time());
-    printk("alarm is %016lx,alarm status is %x\n", rtc_read_alarm(),
-           rtc_alarm_status());
-    printk("master hartid = %d,time is %016lx\n", master_hartid,
-           rtc_read_time());
-    while (1)
-      ;
+void __PREINIT__(.preinit) __NORETURN__ _preinit(size_t hartid, void *dtbptr) {
+  kpre_mapping();
+  __TO_JUMPER__(hartid, dtbptr);
+  __DEADLOOP__
+}
+
+void __PREINIT__(.preinit) __NORETURN__ _preinit_slave(size_t hartid, void *dtbptr) {
+  __TO_JUMPER__(hartid, dtbptr);
+  __DEADLOOP__
+}
+
+static int inited = 0;
+
+void __SECTION__(.text.init) __NORETURN__ _init(size_t hartid, void *dtbptr) {
+  // Dead loop
+  if (inited == 0) {
+    inited = 1;
+    for (int i = 0; i < 4; ++i) {
+      if (i != hartid) {
+        sbi_hart_start(i, (uintptr_t)_preinit_slave, 0);
+      }
+    }
   } else {
-
-    mm_slave();
-    enable_trap();
-    printk("slave hartid = %d\n", hartid);
-    sbi_set_timer(0x1000000 + read_time());
-    while (1)
-      ;
+    
   }
+  __DEADLOOP__
+}
+
+void __SECTION__(.text.jumper) __NORETURN__
+    _jumper(size_t hartid, void *dtbptr) {
+  // Dead loop
+  __JUMPER_RESTORE_STACK(hartid);
+  kmapping(0x80000000, 0x10000000);
+  _init(hartid, dtbptr);
+  __DEADLOOP__
 }

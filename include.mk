@@ -1,9 +1,9 @@
 ARCH        ?= riscv64
 VERSION     ?= debug
-MODULES     := boot mm lib kernel dev trap
+MODULES     := boot mm lib kernel
 TARGET_DIR  := ./target
 DT_DIR      := ./dt
-LD_DIR      := ./tool/lds
+LD_DIR      := ./
 INC_DIR     := include
 MEMORY      := 512
 CORE        ?= 4
