@@ -72,8 +72,7 @@ static error_t __PREINIT__(.pmm)
   }
   return E_OK;
 }
-#include <dev/plic.h>
-void __PREINIT__(.pmm) kpre_mapping(void) {
+pgd_t *__PREINIT__(.pmm) kpre_mapping(void) {
   pgd_t *pre_pgd = (pgd_t *)pre_heap_alloc(PAGE_SIZE, PAGE_SIZE);
 
   kpre_mm_va2pa(pre_pgd, PREHEAP_BASE, PREHEAP_BASE, PREHEAP_SZ,
@@ -96,4 +95,5 @@ void __PREINIT__(.pmm) kpre_mapping(void) {
   kpre_mm_va2pa(pre_pgd, (size_t)pre_pgd | VIRTUAL_KERNEL_BASE, (size_t)pre_pgd,
                 PAGE_SIZE, PTE_R | PTE_W | PTE_G);
   write_pre_satp((((size_t)pre_pgd) >> PAGE_SHIFT) | SATP_SV39_MODE);
+  return pre_pgd;
 }

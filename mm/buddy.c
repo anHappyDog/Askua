@@ -11,9 +11,9 @@ static error_t buddy_free_pages(size_t addr, size_t order);
 static size_t buddy_alloc_pages_zeroed(size_t order);
 
 extern pgd_t *kpgd;
-extern __SECTION__(.text.kmmap)
-    kmapping_va2pa(pgd_t *pgdir, size_t va, size_t pa, size_t size,
-                   size_t perm);
+extern error_t __JUMPER_KMMAP__ kmapping_va2pa(pgd_t *pgdir, size_t va,
+                                               size_t pa, size_t size,
+                                               size_t perm);
 
 struct pb_operations_struct buddy_pb_ops = {
     .alloc_init = buddy_alloc_init,
@@ -52,7 +52,8 @@ static size_t buddy_alloc_pages(size_t order) {
   }
   struct page *page = list_entry(pb_desc->pb_list.next, struct page, pb_list);
   pb_desc->allocated_count++;
-  kmapping_va2pa(kpgd, page->p_virtaddr,page->p_physaddr, PAGE_SIZE << order, PTE_R | PTE_W | PTE_G);
+  kmapping_va2pa(kpgd, page->p_virtaddr, page->p_physaddr, PAGE_SIZE << order,
+                 PTE_R | PTE_W | PTE_G);
   return page->p_virtaddr;
 }
 

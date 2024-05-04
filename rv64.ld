@@ -38,7 +38,7 @@ SECTIONS {
     .jumper : {
         *(.text.jumper)
         *(.text.rawheap)
-        *(.text.kmmap)
+        *(.jumper.kmmap)
         
     }
     . = ALIGN(4K);

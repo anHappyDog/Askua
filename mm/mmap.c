@@ -16,8 +16,8 @@ extern size_t __bss_start__[], __bss_end__[];
 
 pgd_t *kpgd = NULL;
 
-static error_t __SECTION__(.text.kmmap)
-    kmapping_pte(pte_t *pte, size_t va, size_t pa, size_t size, size_t perm) {
+static error_t __JUMPER_KMMAP__ kmapping_pte(pte_t *pte, size_t va, size_t pa,
+                                             size_t size, size_t perm) {
   size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(pa, PAGE_SIZE);
   size_t mapped_sz = 0, nm_sz = 0;
   size_t start = VA_PTE_INDEX(ROUNDDOWN(sva, PAGE_SIZE)), ind = 0;
@@ -28,8 +28,8 @@ static error_t __SECTION__(.text.kmmap)
   return 0;
 }
 
-static error_t __SECTION__(.text.kmmap)
-    kmapping_pmd(pmd_t *pmdir, size_t va, size_t pa, size_t size, size_t perm) {
+static error_t __JUMPER_KMMAP__ kmapping_pmd(pmd_t *pmdir, size_t va, size_t pa,
+                                             size_t size, size_t perm) {
   size_t pmd_sz = 1 << PMD_SHIFT;
   size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(pa, PAGE_SIZE);
   size_t mapped_sz = 0, nm_sz = 0;
@@ -53,9 +53,8 @@ static error_t __SECTION__(.text.kmmap)
   return 0;
 }
 
-error_t __SECTION__(.text.kmmap)
-    kmapping_va2pa(pgd_t *pgdir, size_t va, size_t pa, size_t size,
-                   size_t perm) {
+error_t __JUMPER_KMMAP__ kmapping_va2pa(pgd_t *pgdir, size_t va, size_t pa,
+                                        size_t size, size_t perm) {
   size_t pgd_sz = 1 << PGD_SHIFT;
   size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(pa, PAGE_SIZE);
   size_t mapped_sz = 0, nm_sz = 0;
@@ -81,7 +80,7 @@ error_t __SECTION__(.text.kmmap)
   return E_OK;
 }
 
-error_t __SECTION__(.text.kmmap) kmapping(size_t mem_addr, size_t mem_size) {
+error_t __JUMPER_KMMAP__ kmapping(size_t mem_addr, size_t mem_size) {
   size_t t = 0;
   asm volatile("csrr %0, satp" : "=r"(t) : : "memory");
   pgd_t *pgd =

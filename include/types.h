@@ -27,6 +27,22 @@ typedef unsigned long ulong;
 #define __ALIGN(x) __attribute__((aligned(x)))
 #define __M_INTERRUPT__ __attribute__((interrupt("machine")))
 #define __S_INTERRUPT__ __attribute__((interrupt("supervisor")))
+#define __JUMPER_DATA__ __SECTION__(.jumper.data)
+#define __PREINIT_DATA__ __PREINIT__(.data)
+#define __TEXT_INIT__ __SECTION__(.text.init)
+#define __JUMPER__ __SECTION__(.text.jumper)
+#define __PREINIT_START__ __PREINIT__(._start)
+#define __JUMPER_KMMAP__ __SECTION__(.jumper.kmmap)
+#define __JUMP_TO_INIT__(x, y)                                                 \
+  ({                                                                           \
+    static int __JUMPER_DATA__ __master = 0;                                   \
+    if (__master == 0) {                                                       \
+      __master = 1;                                                            \
+      {x};                                                                     \
+    }                                                                          \
+    {y};                                                                       \
+  })
+
 #define __DEADLOOP__                                                           \
   while (1)                                                                    \
     ;
