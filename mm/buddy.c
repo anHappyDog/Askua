@@ -1,6 +1,7 @@
 #include <list.h>
 #include <mm/mmu.h>
 #include <mm/page.h>
+#include <mm/pgtable.h>
 
 #define BUDDY_MAX_ORDER 6
 
@@ -8,6 +9,11 @@ static error_t buddy_alloc_init(page_t *free_pages, size_t npages);
 static size_t buddy_alloc_pages(size_t order);
 static error_t buddy_free_pages(size_t addr, size_t order);
 static size_t buddy_alloc_pages_zeroed(size_t order);
+
+extern pgd_t *kpgd;
+extern error_t __JUMPER_KMMAP__ kmapping_va2pa(pgd_t *pgdir, size_t va,
+                                               size_t pa, size_t size,
+                                               size_t perm);
 
 struct pb_operations_struct buddy_pb_ops = {
     .alloc_init = buddy_alloc_init,
@@ -44,8 +50,10 @@ static size_t buddy_alloc_pages(size_t order) {
   if (pb_desc->allocated_count >= pb_desc->total_count) {
     return 0;
   }
-  struct page *page = list_entry(&pb_desc->pb_list, struct page, pb_list);
+  struct page *page = list_entry(pb_desc->pb_list.next, struct page, pb_list);
   pb_desc->allocated_count++;
+  kmapping_va2pa(kpgd, page->p_virtaddr, page->p_physaddr, PAGE_SIZE << order,
+                 PTE_R | PTE_W | PTE_G);
   return page->p_virtaddr;
 }
 
@@ -79,7 +87,8 @@ static error_t buddy_alloc_init(page_t *free_pages, size_t npages) {
   buddy_pb_ops.free_pages = free_pages;
   buddy_pb_ops.free_base = free_pages->p_virtaddr;
   for (i = BUDDY_MAX_ORDER - 1; i >= 0; --i) {
-    pb_descs[i].total_count = npages * pb_descs[i].petion / 100;
+    pb_descs[i].total_count =
+        npages * pb_descs[i].petion / 100 / pb_descs[i].nr_pages;
     for (j = 0; j < pb_descs[i].total_count; ++j) {
       free_pages->p_flags = PAGE_FREE;
       list_add_tail(&free_pages->pb_list, &pb_descs[i].pb_list);

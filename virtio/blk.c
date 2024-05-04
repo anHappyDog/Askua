@@ -94,13 +94,13 @@ void virtio_blk_init(size_t base) {
   }
   WRITE_MMIO_REG(base, MMIO_QUEUE_NUM_OFFST, u32, QUEUE_SIZE);
   // ALLOC PAGES FOR  the queue
-  // vq.avail = (struct virtq_avail *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
+  vq.avail = (struct virtq_avail *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
   memset(vq.avail, 0, PAGE_SIZE);
-  // vq.desc = (struct virtq_desc *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
+  vq.desc = (struct virtq_desc *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
   memset(vq.desc, 0, PAGE_SIZE);
-  // vq.used = (struct virtq_used *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
+  vq.used = (struct virtq_used *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
   memset(vq.used, 0, PAGE_SIZE);
-  // vq.avail->flags = VIRTQ_AVAIL_F_NO_INTERRUPT;
+  vq.avail->flags = VIRTQ_AVAIL_F_NO_INTERRUPT;
   WRITE_MMIO_REG(base, MMIO_QUEUE_DESC_LOW_OFFST, u32,
                  ((size_t)vq.desc) & 0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_DESC_HIGH_OFFST, u32,

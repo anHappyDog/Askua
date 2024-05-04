@@ -72,7 +72,7 @@ char *strcpy(char *dst, const char *src) {
   return ret;
 }
 
-const char *strchr(const char *s, int c) {
+char *strchr(const char *s, int c) {
   for (; *s; s++) {
     if (*s == c) {
       return s;

@@ -46,8 +46,8 @@ objdump:$(TARGET_ELF)
 dbg-run:
 	$(QEMU) -kernel $(TARGET_ELF) $(QEMU_FLAGS) -S -s
 
-dbg: $(SYMTABLE)
-	$(GDB) -ex "file $(TARGET_ELF)"  -ex "target remote :1234" -ex "add-symbol-file $(SYMTABLE) 0xFFFFFFF080200000"
+dbg:
+	$(GDB) -ex "file $(TARGET_ELF)"  -ex "target remote :1234"
 
 fix-style:
 	find . -iname *.h | xargs clang-format -i && find . -iname *.c | xargs clang-format -i

@@ -17,4 +17,34 @@ typedef unsigned long ulong;
 
 #define ROUNDDOWN(a, n) ((a) / (n) * (n))
 #define ROUNDUP(a, n) (((a) + (n)-1) / (n) * (n))
+
+#define __PREINIT__(x) __attribute__((section(".boot" #x)))
+#define __NORETURN__ __attribute__((noreturn))
+#define __ALWAYS_INLINE__ __attribute__((always_inline))
+#define __PACKED__ __attribute__((packed))
+#define __WEAK__ __attribute__((weak))
+#define __SECTION__(x) __attribute__((section(#x)))
+#define __ALIGN(x) __attribute__((aligned(x)))
+#define __M_INTERRUPT__ __attribute__((interrupt("machine")))
+#define __S_INTERRUPT__ __attribute__((interrupt("supervisor")))
+#define __JUMPER_DATA__ __SECTION__(.jumper.data)
+#define __PREINIT_DATA__ __PREINIT__(.data)
+#define __TEXT_INIT__ __SECTION__(.text.init)
+#define __JUMPER__ __SECTION__(.text.jumper)
+#define __PREINIT_START__ __PREINIT__(._start)
+#define __JUMPER_KMMAP__ __SECTION__(.jumper.kmmap)
+#define __JUMP_TO_INIT__(x, y)                                                 \
+  ({                                                                           \
+    static int __JUMPER_DATA__ __master = 0;                                   \
+    if (__master == 0) {                                                       \
+      __master = 1;                                                            \
+      {x};                                                                     \
+    }                                                                          \
+    {y};                                                                       \
+  })
+
+#define __DEADLOOP__                                                           \
+  while (1)                                                                    \
+    ;
+
 #endif

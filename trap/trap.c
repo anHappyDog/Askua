@@ -11,10 +11,7 @@ extern void exc_gen_entry(void);
 void trap_handler(trapframe_t *tf);
 
 void enable_trap(void) {
-  printk("trap_init,entrt is %016lx\n",
-         (size_t)exc_gen_entry | VIRTUAL_KERNEL_BASE);
-
-  write_stvec(((size_t)exc_gen_entry | VIRTUAL_KERNEL_BASE) | STVEC_VECTOR);
+  write_stvec(((size_t)exc_gen_entry) | STVEC_VECTOR);
   write_sie(read_sie() | SIE_SEIE | SIE_STIE | SIE_SSIE);
   enable_irq();
 }
@@ -25,7 +22,7 @@ void disable_irq() { write_sstatus(read_sstatus() & ~SSTATUS_SIE); }
 
 u8 is_irq_enabled() { return read_sstatus() & SSTATUS_SIE; }
 
-__attribute__((noreturn)) void handle_reserved_int() {
+__NORETURN__ void handle_reserved_int() {
   panic("Reserved interrupt happened!\n");
 }
 
@@ -104,31 +101,31 @@ void handle_store_page_fault(trapframe_t *tf) {
   panic("Store/AMO page fault!\n");
 }
 
-__attribute__((interrupt("supervisor"))) void handle_s_software_int() {
+__S_INTERRUPT__ void handle_s_software_int() {
   sbi_clear_ipi();
   printk("[%x]S-mode software interrupt!\n", SMP_GET_HARTID());
 }
 
-__attribute__((interrupt("machine"))) void handle_m_software_int() {
+__M_INTERRUPT__ void handle_m_software_int() {
   panic("M-mode software interrupt!\n");
 }
 
-__attribute__((interrupt("supervisor"))) void handle_s_timer_int() {
+__S_INTERRUPT__ void handle_s_timer_int() {
   size_t hartid = SMP_GET_HARTID();
   printk("[%08x] S-mode timer interrupt!\n", hartid);
   sbi_set_timer(0x1000000 + read_time());
 }
 
-__attribute__((interrupt("machine"))) void handle_m_timer_int() {
+__M_INTERRUPT__ void handle_m_timer_int() {
 
   panic("M-mode timer interrupt!\n");
 }
 
-__attribute__((interrupt("machine"))) void handle_m_extern_int() {
+__M_INTERRUPT__ void handle_m_extern_int() {
   panic("M-mode external interrupt!\n");
 }
 
-void __attribute__((interrupt("supervisor"))) handle_s_extern_int() {
+void __S_INTERRUPT__ handle_s_extern_int() {
   size_t hartid = SMP_GET_HARTID();
   uint32_t irq = plic_claim(2 * hartid + 1);
   // uint32_t irq = 0x8;

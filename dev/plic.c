@@ -4,10 +4,8 @@
 #include <smp.h>
 
 static void _plic_init(size_t base, size_t size);
-static u32 plic_claim_um(size_t base, size_t context);
-static void plic_complete_um(size_t base, size_t context, u32 irq);
-static u32 plic_claim_mm(size_t base, size_t context);
-static void plic_complete_mm(size_t base, size_t context, u32 irq);
+static u32 _plic_claim(size_t base, size_t context);
+static void _plic_complete(size_t base, size_t context, u32 irq);
 
 struct plic_operations_struct {
   void (*init)(size_t base, size_t size);
@@ -15,16 +13,10 @@ struct plic_operations_struct {
   void (*complete)(size_t base, size_t context, u32 irq);
 };
 
-static struct plic_operations_struct plic_um_ops = {
+static struct plic_operations_struct plic_ops = {
     .init = _plic_init,
-    .claim = plic_claim_um,
-    .complete = plic_complete_um,
-};
-
-static struct plic_operations_struct plic_mm_ops = {
-    .init = _plic_init,
-    .claim = plic_claim_mm,
-    .complete = plic_complete_mm,
+    .claim = _plic_claim,
+    .complete = _plic_complete,
 };
 
 struct plic {
@@ -34,34 +26,24 @@ struct plic {
 };
 
 static struct plic plic = {
-    .pm_base = 0,
-    .pm_size = 0,
-    .ops = &plic_um_ops,
+    .pm_base = SIFIVE_BASE_ADDR,
+    .pm_size = SIFIVE_BASE_SIZE,
+    .ops = &plic_ops,
 };
 
-static u32 plic_claim_um(size_t base, size_t context) {
-  return *(volatile u32 *)(base + SIFIVE_INT_PRI_CLAIM_BASE + 0x1000 * context);
-}
-
-static void plic_complete_um(size_t base, size_t context, u32 irq) {
-  *(volatile u32 *)(base + SIFIVE_INT_PRI_CLAIM_BASE + 0x1000 * context) = irq;
-}
-
-static u32 plic_claim_mm(size_t base, size_t context) {
+static u32 _plic_claim(size_t base, size_t context) {
   return *(volatile u32 *)(base + VIRTUAL_KERNEL_BASE +
                            SIFIVE_INT_PRI_CLAIM_BASE + 0x1000 * context);
 }
 
-static void plic_complete_mm(size_t base, size_t context, u32 irq) {
+static void _plic_complete(size_t base, size_t context, u32 irq) {
   *(volatile u32 *)(base + VIRTUAL_KERNEL_BASE + SIFIVE_INT_PRI_CLAIM_BASE +
                     0x1000 * context) = irq;
 }
 
-void plic_turn_um(void) { plic.ops = &plic_um_ops; }
-
-void plic_turn_mm(void) { plic.ops = &plic_mm_ops; }
-
-void plic_init(size_t base, size_t size) { plic.ops->init(base, size); }
+void plic_init(size_t base, size_t size) {
+  plic.ops->init(plic.pm_base | VIRTUAL_KERNEL_BASE, plic.pm_size);
+}
 
 inline void _plic_init(size_t base, size_t size) {
   size_t hartid = SMP_GET_HARTID();

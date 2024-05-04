@@ -15,8 +15,6 @@
 void rtc_init(size_t base, size_t size);
 u64 rtc_read_time(void);
 void rtc_write_time(u64 time);
-void rtc_turn_um(void);
-void rtc_turn_mm(void);
 u64 rtc_read_alarm(void);
 u32 rtc_alarm_status(void);
 u32 rtc_irq_is_enabled(void);

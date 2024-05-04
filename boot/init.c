@@ -7,34 +7,53 @@
 #include <sbicall.h>
 #include <smp.h>
 #include <trap.h>
+#include <virtio/virtio_blk.h>
 
-static u8 _is_inited = 0;
-u32 master_hartid = 0;
+static pgd_t *__PREINIT_DATA__ pre_pgd = NULL;
+extern void __PREINIT_START__ _start_slave(void);
+extern pgd_t *__PREINIT__() kpre_mapping(void);
+extern error_t __JUMPER_KMMAP__ kmapping(size_t mem_addr, size_t mem_size);
 
-void _init(size_t hartid, void *dtbptr) {
-  if (!_is_inited) {
-    _is_inited = 1;
-    master_hartid = SMP_GET_HARTID();
-    uart_init();
-    rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
-    plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
-    raw_heap_init();
-    mm_master(0x80000000, 0x10000000);
-    enable_trap();
-    sbi_set_timer(0x1000000 + read_time());
-    printk("alarm is %016lx,alarm status is %x\n", rtc_read_alarm(),
-           rtc_alarm_status());
-    printk("master hartid = %d,time is %016lx\n", master_hartid,
-           rtc_read_time());
-    while (1)
-      ;
-  } else {
+void __PREINIT__() __NORETURN__ _preinit(size_t hartid, void *dtbptr) {
+  pre_pgd = kpre_mapping();
+  __TO_JUMPER__(hartid, dtbptr);
+  __DEADLOOP__
+}
 
-    mm_slave();
-    enable_trap();
-    printk("slave hartid = %d\n", hartid);
-    sbi_set_timer(0x1000000 + read_time());
-    while (1)
-      ;
+void __PREINIT__() __NORETURN__ _preinit_slave(size_t hartid, void *dtbptr) {
+  __SLAVE_ENABLE_MMU__(pre_pgd);
+  __TO_JUMPER__(hartid, dtbptr);
+  __DEADLOOP__
+}
+
+void __TEXT_INIT__ __NORETURN__ _init(size_t hartid, void *dtbptr) {
+  enable_trap();
+  plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
+  rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
+  mm_paging(MEM_BASE, MEM_SIZE);
+  virtio_blk_init(VIRTIO_BLK_ADDR | VIRTUAL_KERNEL_BASE);
+  printk("hartid: %d\n", hartid);
+  for (int i = 0; i < CORE; i++) {
+    if (i != hartid) {
+      sbi_hart_start(i, (uintptr_t)_start_slave, (uintptr_t)dtbptr);
+    }
   }
+  sbi_set_timer(read_time() + 1000000);
+  __DEADLOOP__
+}
+
+void __TEXT_INIT__ __NORETURN__ _init_slave(size_t hartid) {
+  enable_trap();
+  sbi_set_timer(read_time() + 1000000);
+  __DEADLOOP__
+}
+
+void __JUMPER__ __NORETURN__ _jumper(size_t hartid, void *dtbptr) {
+  __JUMPER_RESTORE_STACK(hartid);
+  __JUMP_TO_INIT__(
+      {
+        kmapping(MEM_BASE, MEM_SIZE);
+        _init(hartid, dtbptr);
+      },
+      { _init_slave(hartid); });
 }
