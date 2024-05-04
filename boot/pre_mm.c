@@ -9,9 +9,8 @@ static error_t __PREINIT__(.pmm)
   size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(pa, PAGE_SIZE);
   size_t mapped_sz = 0, nm_sz = 0;
   size_t eva = ROUNDUP(va + size, PAGE_SIZE);
-  size_t start = VA_PTE_INDEX(ROUNDDOWN(sva, PAGE_SIZE)),
-         end = VA_PTE_INDEX(ROUNDUP(eva, PAGE_SIZE)), ind = 0;
-  for (ind = start; ind < end; ++ind) {
+  size_t start = VA_PTE_INDEX(ROUNDDOWN(sva, PAGE_SIZE)), ind = 0;
+  for (ind = start; mapped_sz < size; ++ind) {
     pte[ind] = PA_TO_PTE(spa + mapped_sz) | perm | PTE_V;
     mapped_sz += PAGE_SIZE;
   }
@@ -24,15 +23,20 @@ static error_t __PREINIT__(.pmm)
   size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(pa, PAGE_SIZE);
   size_t mapped_sz = 0, nm_sz = 0;
   size_t eva = ROUNDUP(va + size, PAGE_SIZE);
-  size_t start = VA_PMD_INDEX(ROUNDDOWN(sva, pmd_sz)),
-         end = VA_PMD_INDEX(ROUNDUP(eva, pmd_sz)), ind = 0;
-  for (ind = start; ind < end; ++ind) {
-    if (!(pmdir[ind] & PTE_V)) {
-      pmdir[ind] = PA_TO_PMD(pre_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
-    }
-    pte_t *pte = (pte_t *)PMD_TO_PA(pmdir[ind]);
+  size_t start = VA_PMD_INDEX(ROUNDDOWN(sva, pmd_sz)), ind = 0;
+  for (ind = start; mapped_sz < size; ++ind) {
     nm_sz = mapped_sz + pmd_sz < size ? pmd_sz : size - mapped_sz;
-    kpre_mm_pte(pte, sva, spa, nm_sz, perm);
+    nm_sz = nm_sz > (pmd_sz - (sva % pmd_sz)) ? pmd_sz - (sva % pmd_sz) : nm_sz;
+    if (nm_sz == pmd_sz && spa % pmd_sz == 0 && !(pmdir[ind] & PTE_V)) {
+      pmdir[ind] = PA_TO_PMD(spa) | perm | PTE_V;
+    } else {
+      if (!(pmdir[ind] & PTE_V)) {
+        pmdir[ind] = PA_TO_PMD(pre_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
+      }
+      pte_t *pte = (pte_t *)PMD_TO_PA(pmdir[ind]);
+
+      kpre_mm_pte(pte, sva, spa, nm_sz, perm);
+    }
     mapped_sz += nm_sz;
     sva += nm_sz;
     spa += nm_sz;
@@ -48,15 +52,20 @@ static error_t __PREINIT__(.pmm)
   size_t mapped_sz = 0, nm_sz = 0;
   size_t eva = ROUNDUP(va + size, PAGE_SIZE),
          epa = ROUNDUP(pa + size, PAGE_SIZE);
-  size_t start = VA_PGD_INDEX(ROUNDDOWN(sva, pgd_sz)),
-         end = VA_PGD_INDEX(ROUNDUP(eva, pgd_sz)), ind = 0;
-  for (ind = start; ind < end; ++ind) {
-    if (!(pgdir[ind] & PTE_V)) {
-      pgdir[ind] = PA_TO_PGD(pre_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
-    }
-    pmd_t *pmd = (pmd_t *)PGD_TO_PA(pgdir[ind]);
+  size_t start = VA_PGD_INDEX(ROUNDDOWN(sva, pgd_sz)), ind = 0;
+  for (ind = start; mapped_sz < size; ++ind) {
     nm_sz = mapped_sz + pgd_sz < size ? pgd_sz : size - mapped_sz;
-    kpre_mm_pmd(pmd, sva, spa, nm_sz, perm);
+    nm_sz = nm_sz > (pgd_sz - (sva % pgd_sz)) ? pgd_sz - (sva % pgd_sz) : nm_sz;
+    if (nm_sz == pgd_sz && spa % pgd_sz == 0 && !(pgdir[ind] & PTE_V)) {
+      pgdir[ind] = PA_TO_PGD(spa) | perm | PTE_V;
+    } else {
+      if (!(pgdir[ind] & PTE_V)) {
+        pgdir[ind] = PA_TO_PGD(pre_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
+      }
+      pmd_t *pmd = (pmd_t *)PGD_TO_PA(pgdir[ind]);
+
+      kpre_mm_pmd(pmd, sva, spa, nm_sz, perm);
+    }
     mapped_sz += nm_sz;
     sva += nm_sz;
     spa += nm_sz;

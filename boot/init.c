@@ -34,6 +34,7 @@ void __SECTION__(.text.init) __NORETURN__ _init(size_t hartid, void *dtbptr) {
     enable_trap();
     plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
     rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
+    mm_paging(0x80000000, 0x10000000);
     virtio_blk_init(VIRTIO_BLK_ADDR | VIRTUAL_KERNEL_BASE);
     printk("hartid: %d\n", hartid);
   } else {

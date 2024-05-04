@@ -35,12 +35,17 @@ static error_t __SECTION__(.text.kmmap)
   size_t mapped_sz = 0, nm_sz = 0;
   size_t start = VA_PMD_INDEX(ROUNDDOWN(sva, pmd_sz)), ind = 0;
   for (ind = start; mapped_sz < size; ++ind) {
-    if (!(pmdir[ind] & PTE_V)) {
-      pmdir[ind] = PA_TO_PMD(raw_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
-    }
-    pte_t *pte = (pte_t *)KERNEL_PA_TO_VA(PMD_TO_PA(pmdir[ind]));
     nm_sz = (mapped_sz + pmd_sz) < size ? pmd_sz : (size - mapped_sz);
-    kmapping_pte(pte, sva, spa, nm_sz, perm);
+    nm_sz = nm_sz > (pmd_sz - (sva % pmd_sz)) ? pmd_sz - (sva % pmd_sz) : nm_sz;
+    if (nm_sz == pmd_sz && spa % pmd_sz == 0 && !(pmdir[ind] & PTE_V)) {
+      pmdir[ind] = PA_TO_PMD(spa) | perm | PTE_V;
+    } else {
+      if (!(pmdir[ind] & PTE_V)) {
+        pmdir[ind] = PA_TO_PMD(raw_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
+      }
+      pte_t *pte = (pte_t *)KERNEL_PA_TO_VA(PMD_TO_PA(pmdir[ind]));
+      kmapping_pte(pte, sva, spa, nm_sz, perm);
+    }
     mapped_sz += nm_sz;
     sva += nm_sz;
     spa += nm_sz;
@@ -48,7 +53,7 @@ static error_t __SECTION__(.text.kmmap)
   return 0;
 }
 
-static error_t __SECTION__(.text.kmmap)
+error_t __SECTION__(.text.kmmap)
     kmapping_va2pa(pgd_t *pgdir, size_t va, size_t pa, size_t size,
                    size_t perm) {
   size_t pgd_sz = 1 << PGD_SHIFT;
@@ -57,12 +62,18 @@ static error_t __SECTION__(.text.kmmap)
   size_t epa = ROUNDUP(pa + size, PAGE_SIZE);
   size_t start = VA_PGD_INDEX(ROUNDDOWN(sva, pgd_sz)), ind = 0;
   for (ind = start; mapped_sz < size; ++ind) {
-    if (!(pgdir[ind] & PTE_V)) {
-      pgdir[ind] = PA_TO_PGD(raw_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
-    }
-    pmd_t *pmd = (pmd_t *)KERNEL_PA_TO_VA(PGD_TO_PA(pgdir[ind]));
     nm_sz = (mapped_sz + pgd_sz) < size ? pgd_sz : (size - mapped_sz);
-    kmapping_pmd(pmd, sva, spa, nm_sz, perm);
+    nm_sz = nm_sz > (pgd_sz - (sva % pgd_sz)) ? pgd_sz - (sva % pgd_sz) : nm_sz;
+    if (nm_sz == pgd_sz && spa % pgd_sz == 0 && !(pgdir[ind] & PTE_V)) {
+      pgdir[ind] = PA_TO_PGD(spa) | perm | PTE_V;
+    } else {
+      if (!(pgdir[ind] & PTE_V)) {
+        pgdir[ind] = PA_TO_PGD(raw_heap_alloc(PAGE_SIZE, PAGE_SIZE)) | PTE_V;
+      }
+      pmd_t *pmd = (pmd_t *)KERNEL_PA_TO_VA(PGD_TO_PA(pgdir[ind]));
+
+      kmapping_pmd(pmd, sva, spa, nm_sz, perm);
+    }
     mapped_sz += nm_sz;
     sva += nm_sz;
     spa += nm_sz;
