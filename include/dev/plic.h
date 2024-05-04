@@ -4,7 +4,7 @@
 //! hardcore the base address and size of the PLIC **temporarily**
 //! virt's dts shows that it only supports the 0x9 and 0xb interrupts.
 //! which is the VirtIO's interrupt and the RTC's interrupt.
-#define SIFIVE_BASE_ADDR 0x0C000000
+#define SIFIVE_BASE_ADDR 0x0C000000UL
 #define SIFIVE_INT_PRI_BASE 0x0
 #define SIFIVE_INT_PENDING_BASE 0x1000
 #define SIFIVE_INT_ENABLE_BASE 0x2000
@@ -22,7 +22,5 @@
 void plic_init(size_t base, size_t size);
 u32 plic_claim(size_t context);
 void plic_complete(size_t context, u32 irq);
-void plic_turn_um(void);
-void plic_turn_mm(void);
 
 #endif // __PLIC_H__

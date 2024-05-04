@@ -52,7 +52,7 @@ struct pb_operations_struct {
 typedef struct mpaging mpaging_t;
 
 #define PAGE_VA_TO_PA(va) ((va) & ~VIRTUAL_KERNEL_BASE)
-
+#define KERNEL_PA_TO_VA(pa) ((pa) | VIRTUAL_KERNEL_BASE)
 error_t mm_paging(size_t mem_base, size_t mem_size);
 
 size_t alloc_pages(size_t order);

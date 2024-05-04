@@ -42,7 +42,7 @@ static error_t __PREINIT__(.pmm)
 
 static error_t __PREINIT__(.pmm)
     kpre_mm_va2pa(pgd_t *pgdir, size_t va, size_t pa, size_t size,
-                   size_t perm) {
+                  size_t perm) {
   size_t pgd_sz = 1 << PGD_SHIFT;
   size_t sva = ROUNDDOWN(va, PAGE_SIZE), spa = ROUNDDOWN(pa, PAGE_SIZE);
   size_t mapped_sz = 0, nm_sz = 0;
@@ -63,26 +63,28 @@ static error_t __PREINIT__(.pmm)
   }
   return E_OK;
 }
-
+#include <dev/plic.h>
 void __PREINIT__(.pmm) kpre_mapping(void) {
   pgd_t *pre_pgd = (pgd_t *)pre_heap_alloc(PAGE_SIZE, PAGE_SIZE);
+
   kpre_mm_va2pa(pre_pgd, PREHEAP_BASE, PREHEAP_BASE, PREHEAP_SZ,
-                 PTE_R | PTE_W | PTE_G);
+                PTE_R | PTE_W | PTE_G);
   kpre_mm_va2pa(pre_pgd, PRESTACK_BASE, PRESTACK_BASE, PRESTACK_SZ,
-                 PTE_R | PTE_W | PTE_G);
+                PTE_R | PTE_W | PTE_G);
   kpre_mm_va2pa(pre_pgd, PREINIT_BASE, PREINIT_BASE, PAGE_SIZE,
-                 PTE_R | PTE_X | PTE_G);
-
+                PTE_R | PTE_X | PTE_W | PTE_G);
+  kpre_mm_va2pa(pre_pgd, PREHEAP_BASE | VIRTUAL_KERNEL_BASE, PREHEAP_BASE,
+                PREHEAP_SZ, PTE_R | PTE_W | PTE_G);
   kpre_mm_va2pa(pre_pgd, PHYSICAL_STACK_BASE | VIRTUAL_KERNEL_BASE,
-                 PHYSICAL_STACK_BASE, STACK_SZ, PTE_R | PTE_W | PTE_G);
+                PHYSICAL_STACK_BASE, STACK_SZ, PTE_R | PTE_W | PTE_G);
   kpre_mm_va2pa(pre_pgd, RAWHEAP_BASE | VIRTUAL_KERNEL_BASE, RAWHEAP_BASE,
-                 RAWHEAP_SZ, PTE_R | PTE_W | PTE_G);
+                RAWHEAP_SZ, PTE_R | PTE_W | PTE_G);
 
-  kpre_mm_va2pa(pre_pgd, PHYSICAL_JUMPER_BASE |  VIRTUAL_KERNEL_BASE,
-                 PHYSICAL_JUMPER_BASE, PAGE_SIZE, PTE_R | PTE_X | PTE_G);
+  kpre_mm_va2pa(pre_pgd, PHYSICAL_JUMPER_BASE | VIRTUAL_KERNEL_BASE,
+                PHYSICAL_JUMPER_BASE, PAGE_SIZE, PTE_R | PTE_X | PTE_G);
   kpre_mm_va2pa(pre_pgd, PHYSICAL_JUMPER_DATA_BASE | VIRTUAL_KERNEL_BASE,
-                 PHYSICAL_JUMPER_DATA_BASE, PAGE_SIZE, PTE_R | PTE_W | PTE_G);
-  kpre_mm_va2pa(pre_pgd, (size_t)pre_pgd | VIRTUAL_KERNEL_BASE,
-                 (size_t)pre_pgd, PAGE_SIZE, PTE_R | PTE_W | PTE_G);
+                PHYSICAL_JUMPER_DATA_BASE, PAGE_SIZE, PTE_R | PTE_W | PTE_G);
+  kpre_mm_va2pa(pre_pgd, (size_t)pre_pgd | VIRTUAL_KERNEL_BASE, (size_t)pre_pgd,
+                PAGE_SIZE, PTE_R | PTE_W | PTE_G);
   write_pre_satp((((size_t)pre_pgd) >> PAGE_SHIFT) | SATP_SV39_MODE);
 }

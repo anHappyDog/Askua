@@ -1,3 +1,4 @@
+#include <virtio/virtio_blk.h>
 #include <asm/csr.h>
 #include <dev/plic.h>
 #include <dev/rtc.h>
@@ -9,7 +10,8 @@
 #include <trap.h>
 
 extern void __PREINIT__(.pmm) kpre_mapping(void);
-extern error_t __SECTION__(.text.kmmap) kmapping(size_t mem_addr, size_t mem_size);
+extern error_t __SECTION__(.text.kmmap)
+    kmapping(size_t mem_addr, size_t mem_size);
 
 void __PREINIT__(.preinit) __NORETURN__ _preinit(size_t hartid, void *dtbptr) {
   kpre_mapping();
@@ -17,7 +19,8 @@ void __PREINIT__(.preinit) __NORETURN__ _preinit(size_t hartid, void *dtbptr) {
   __DEADLOOP__
 }
 
-void __PREINIT__(.preinit) __NORETURN__ _preinit_slave(size_t hartid, void *dtbptr) {
+void __PREINIT__(.preinit) __NORETURN__
+    _preinit_slave(size_t hartid, void *dtbptr) {
   __TO_JUMPER__(hartid, dtbptr);
   __DEADLOOP__
 }
@@ -28,13 +31,12 @@ void __SECTION__(.text.init) __NORETURN__ _init(size_t hartid, void *dtbptr) {
   // Dead loop
   if (inited == 0) {
     inited = 1;
-    for (int i = 0; i < 4; ++i) {
-      if (i != hartid) {
-        sbi_hart_start(i, (uintptr_t)_preinit_slave, 0);
-      }
-    }
+    enable_trap();
+    plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
+    rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
+    virtio_blk_init(VIRTIO_BLK_ADDR | VIRTUAL_KERNEL_BASE);
+    printk("hartid: %d\n", hartid);
   } else {
-    
   }
   __DEADLOOP__
 }

@@ -15,10 +15,14 @@ static __PREINIT__(.preheap.data) struct pre_heap heap = {
 
 size_t __PREINIT__(.preheap) pre_heap_alloc(size_t size, size_t align) {
   size_t ret = heap.current;
+  ret = ROUNDUP(ret, align);
   if (ret + size > heap.end) {
     return 0;
   }
-  ret = ROUNDUP(ret, align);
-  heap.current = ret + size;
-  return ret;
+  for (size_t i = 0; i < size; ++i) {
+    *(volatile u8 *)ret = 0;
+    ret++;
+  }
+  heap.current = ret;
+  return ret - size;
 }
