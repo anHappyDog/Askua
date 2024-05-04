@@ -51,6 +51,7 @@ static size_t buddy_alloc_pages(size_t order) {
     return 0;
   }
   struct page *page = list_entry(pb_desc->pb_list.next, struct page, pb_list);
+  list_del(&page->pb_list);
   pb_desc->allocated_count++;
   kmapping_va2pa(kpgd, page->p_virtaddr, page->p_physaddr, PAGE_SIZE << order,
                  PTE_R | PTE_W | PTE_G);

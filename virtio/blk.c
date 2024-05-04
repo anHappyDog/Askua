@@ -6,17 +6,45 @@
 #include <virtio/virtio_blk.h>
 #include <virtio/virtq.h>
 
-static struct virtq vq;
-static spinlock_t desc_lock = SPIN_INIT;
 static u8 desc_bitmap[ROUNDDOWN(QUEUE_SIZE, 8) >> 3] = {0};
-
+static void _virtio_blk_init(size_t base);
+static void _virtio_blk_rw_sectors(size_t base, size_t sector, size_t count,
+                                   void *buf, uint8_t w);
 //! acutally the vq ,the desc alloc, the fs all need locks,but the type if
 //! different. we now only set lock for the desc alloc. Moreover, the lock need
 //! to handle the interrupt but we currently not.
-uint32_t virtio_desc_alloc() {
+
+struct virtio_blk_dev {
+  size_t pm_base;
+  struct virtio_blk_config cfg;
+  struct virtq vq;
+  spinlock_t desc_lock;
+  struct vblk_operations_struct *ops;
+  u8 desc_bitmap[ROUNDDOWN(QUEUE_SIZE, 8) >> 3];
+};
+
+struct vblk_operations_struct {
+  void (*init)(size_t base);
+  void (*rw_sectors)(size_t base, size_t sector, size_t count, void *buf,
+                     uint8_t w);
+};
+
+static struct vblk_operations_struct vblk_ops = {
+    .init = _virtio_blk_init,
+    .rw_sectors = _virtio_blk_rw_sectors,
+};
+
+static struct virtio_blk_dev vblk_dev = {
+    .pm_base = VIRTIO_BLK_ADDR,
+    .ops = &vblk_ops,
+    .desc_bitmap = {0},
+    .desc_lock = SPIN_INIT,
+};
+
+static uint32_t virtio_desc_alloc() {
 
   int alloc = -1;
-  spin_lock(&desc_lock);
+  spin_lock(&vblk_dev.desc_lock);
   for (int i = 0; i < ROUNDDOWN(QUEUE_SIZE, 8) >> 3; ++i) {
     if (desc_bitmap[i] != 0xff) {
       for (int j = 0; j < 8; ++j) {
@@ -29,20 +57,20 @@ uint32_t virtio_desc_alloc() {
       break;
     }
   }
-  spin_unlock(&desc_lock);
+  spin_unlock(&vblk_dev.desc_lock);
   return alloc;
 }
 
-void virtio_desc_free(const le16 *allocs, size_t length) {
-  spin_lock(&desc_lock);
+static void virtio_desc_free(const le16 *allocs, size_t length) {
+  spin_lock(&vblk_dev.desc_lock);
   for (int i = 0; i < length; ++i) {
     desc_bitmap[allocs[i] >> 3] &= ~(1 << (allocs[i] & 0x7));
   }
-  spin_unlock(&desc_lock);
+  spin_unlock(&vblk_dev.desc_lock);
 }
-void virtio_blk_init(size_t base) {
-  u32 features, status = 0;
 
+static void _virtio_blk_init(size_t base) {
+  u32 features, status = 0;
   if (READ_MMIO_REG(base, MMIO_MAGIC_OFFST, u32) != VIRTIO_MMIO_MAGIC) {
     panic("virtio_blk: wrong magic number\n");
   }
@@ -94,39 +122,41 @@ void virtio_blk_init(size_t base) {
   }
   WRITE_MMIO_REG(base, MMIO_QUEUE_NUM_OFFST, u32, QUEUE_SIZE);
   // ALLOC PAGES FOR  the queue
-  vq.avail = (struct virtq_avail *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
-  memset(vq.avail, 0, PAGE_SIZE);
-  vq.desc = (struct virtq_desc *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
-  memset(vq.desc, 0, PAGE_SIZE);
-  vq.used = (struct virtq_used *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
-  memset(vq.used, 0, PAGE_SIZE);
-  vq.avail->flags = VIRTQ_AVAIL_F_NO_INTERRUPT;
+  struct virtq* vq = &vblk_dev.vq;
+  vq->avail = (struct virtq_avail *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
+  memset(vq->avail, 0, PAGE_SIZE);
+  vq->desc = (struct virtq_desc *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
+  memset(vq->desc, 0, PAGE_SIZE);
+  vq->used = (struct virtq_used *)(alloc_pages(0) | VIRTUAL_KERNEL_BASE);
+  memset(vq->used, 0, PAGE_SIZE);
+  vq->avail->flags = VIRTQ_AVAIL_F_NO_INTERRUPT;
   WRITE_MMIO_REG(base, MMIO_QUEUE_DESC_LOW_OFFST, u32,
-                 ((size_t)vq.desc) & 0xffffffff);
+                 ((size_t)vq->desc & ~VIRTUAL_KERNEL_BASE) & 0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_DESC_HIGH_OFFST, u32,
-                 (((size_t)vq.desc) >> 32) & 0xffffffff);
+                 (((size_t)vq->desc & ~VIRTUAL_KERNEL_BASE) >> 32) & 0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_DRIVER_LOW_OFFST, u32,
-                 ((size_t)vq.avail) & 0xffffffff);
+                 ((size_t)vq->avail & ~VIRTUAL_KERNEL_BASE) & 0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_DRIVER_HIGH_OFFST, u32,
-                 (((size_t)vq.avail) >> 32) & 0xffffffff);
+                 (((size_t)vq->avail & ~VIRTUAL_KERNEL_BASE) >> 32) &
+                     0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_DEVICE_LOW_OFFST, u32,
-                 ((size_t)vq.used) & 0xffffffff);
+                 ((size_t)vq->used & ~VIRTUAL_KERNEL_BASE) & 0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_DEVICE_HIGH_OFFST, u32,
-                 (((size_t)vq.used) >> 32) & 0xffffffff);
+                 (((size_t)vq->used & ~VIRTUAL_KERNEL_BASE) >> 32) & 0xffffffff);
   WRITE_MMIO_REG(base, MMIO_QUEUE_READY_OFFST, u32, 0x1);
   status |= DRIVER_OK;
   WRITE_MMIO_REG(base, MMIO_STATUS_OFFST, u32, status);
-  printk("virtio_blk: init finished.\n");
 }
 
 #define MAX_USED_DESC_ONCE_CNT 12
 
-void virtio_blk_rw_sectors(size_t base, size_t sector, size_t count, void *buf,
-                           uint8_t w) {
+static void _virtio_blk_rw_sectors(size_t base, size_t sector, size_t count,
+                                   void *buf, uint8_t w) {
   u32 desc_idx;
   le16 allocs[MAX_USED_DESC_ONCE_CNT];
   le16 usd_desc = 0, idx = 0;
   struct virtq_desc *desc;
+  struct virtq* vq = &vblk_dev.vq;
   struct virtio_blk_req rq = {
       .type = w ? VIRTIO_BLK_T_OUT : VIRTIO_BLK_T_IN,
       .sector = sector,
@@ -135,39 +165,41 @@ void virtio_blk_rw_sectors(size_t base, size_t sector, size_t count, void *buf,
       .status = 0x3,
   };
   allocs[usd_desc++] = desc_idx = virtio_desc_alloc();
-  desc = &vq.desc[desc_idx];
+  desc = & vq->desc[desc_idx];
   desc->addr = (size_t)&rq;
   desc->len = 16;
   desc->flags = VIRTQ_DESC_F_NEXT;
   allocs[usd_desc++] = desc_idx = virtio_desc_alloc();
   desc->next = desc_idx;
-  desc = &vq.desc[desc->next];
+  desc = &vq->desc[desc->next];
   for (int i = 0; i < count; ++i) {
     desc->addr = (size_t)(buf + i * 512);
     desc->len = 1 * 512; // count
     desc->flags = (w ? 0 : VIRTQ_DESC_F_WRITE) | VIRTQ_DESC_F_NEXT;
     allocs[usd_desc++] = desc_idx = virtio_desc_alloc();
     desc->next = desc_idx;
-    desc = &vq.desc[desc->next];
+    desc = &vq->desc[desc->next];
   }
   desc->addr = (size_t)&rq.status;
   desc->len = 1;
   desc->flags = VIRTQ_DESC_F_WRITE;
   desc->next = 0;
-  idx = vq.avail->idx;
+  idx = vq->avail->idx;
   // RISCV_FENCE(rw,rw);
-  vq.avail->ring[idx] = 0;
+  vq->avail->ring[idx] = allocs[0];
   // RISCV_FENCE(rw,rw);
-  vq.avail->idx = (idx + 1) % QUEUE_SIZE;
-
-  // RISCV_FENCE(rw,rw);
+  vq->avail->idx = (idx + 1) % QUEUE_SIZE;
   WRITE_MMIO_REG(base, MMIO_QUEUE_NOTIFY_OFFST, u32, 0);
   asm volatile("wfi");
   //& here we can also use the pull to replace the interrupt
-  // while (1) {
-  // 	WRITE_MMIO_REG(base,MMIO_INTERRUPT_ACK_OFFST,u32,READ_MMIO_REG(base,MMIO_INTERRUPT_STATUS_OFFST,u32)
-  // - & 0x3); 	if (rq.status != 0x3) { 		break;
-  // 	}
-  // }
   virtio_desc_free(allocs, usd_desc);
+}
+
+void virtio_blk_init(size_t base) {
+  vblk_dev.ops->init(vblk_dev.pm_base | VIRTUAL_KERNEL_BASE);
+}
+
+void virtio_blk_rw_sectors(size_t sector, size_t count, void *buf, uint8_t w) {
+  vblk_dev.ops->rw_sectors(vblk_dev.pm_base | VIRTUAL_KERNEL_BASE, sector,
+                           count, buf, w);
 }

@@ -138,10 +138,6 @@ struct virtio_blk_lifetime {
 #define VIRTIO_BLK_S_UNSUPP 2
 
 void virtio_blk_init(size_t base);
-
-void virtio_blk_read_sectors(size_t base, size_t sector, size_t count,
-                             void *buf);
-void virtio_blk_write_sectors(size_t base, size_t sector, size_t count,
-                              void *buf);
+void virtio_blk_rw_sectors(size_t sector, size_t count, void *buf, uint8_t w);
 
 #endif // __VIRTIO_BLK_H__

@@ -28,6 +28,8 @@
 #define SBI_EXT_DBTR 0x44425452
 #define SBI_EXT_SSE 0x535345
 
+#define SBI_EXT_IPI_SEND_IPI			0x0
+
 /* SBI return error codes */
 #define SBI_SUCCESS 0
 #define SBI_ERR_FAILED -1
@@ -66,7 +68,7 @@ struct sbiret sbi_hart_suspend(size_t suspend_type, size_t resume_addr,
                                size_t opaque);
 
 struct sbiret sbi_hart_wakeup(size_t hartid);
-
+struct sbiret sbi_send_ipi(unsigned long hart_mask,unsigned long hart_mask_base);
 void sbi_shutdown(void);
 void sbi_clear_ipi(void);
 #endif

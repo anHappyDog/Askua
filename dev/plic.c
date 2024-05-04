@@ -46,17 +46,17 @@ void plic_init(size_t base, size_t size) {
 }
 
 inline void _plic_init(size_t base, size_t size) {
-  size_t hartid = SMP_GET_HARTID();
+  // size_t hartid = SMP_GET_HARTID();
   *(volatile u32 *)(base + VIRTIO_MMIO_INT * 4) = 2;
   *(volatile u32 *)(base + GOLD_FISH_RTC_INT * 4) = 1;
-
-  *(volatile u32 *)(base + SIFIVE_INT_ENABLE_BASE +
-                    SIFIVE_ENABLE_CONTEXT_BLOCK_SIZE * (2 * hartid + 1) +
-                    (VIRTIO_MMIO_INT / 32) * 4) |= 1 << (VIRTIO_MMIO_INT % 32);
-  *(volatile u32 *)(base + SIFIVE_INT_PRI_THRESHOLD_BASE +
-                    0x1000 * (2 * hartid + 1)) = 0;
-
-  printk("plic: init finished\n");
+  for (int i = 0; i < CORE; ++i) {
+    *(volatile u32 *)(base + SIFIVE_INT_ENABLE_BASE +
+                      SIFIVE_ENABLE_CONTEXT_BLOCK_SIZE * (2 * i + 1) +
+                      (VIRTIO_MMIO_INT / 32) * 4) |= 1
+                                                     << (VIRTIO_MMIO_INT % 32);
+    *(volatile u32 *)(base + SIFIVE_INT_PRI_THRESHOLD_BASE +
+                      0x1000 * (2 * i + 1)) = 0;
+  }
 }
 
 u32 plic_claim(size_t context) {

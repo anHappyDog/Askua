@@ -47,6 +47,24 @@ struct sbiret sbi_hart_wakeup(size_t hartid) {
   return ret;
 }
 
+struct sbiret sbi_send_ipi(unsigned long hart_mask,unsigned long hart_mask_base) {
+  struct sbiret ret;
+  asm volatile("mv a0, %1\n"
+               "mv a1, %2\n"
+               "li a7, %3\n"
+               "li a6, %4\n"
+               "ecall\n"
+               "mv %0, a0"
+               : "=r"(ret.error)
+               : "r"(hart_mask), "r"(hart_mask_base), "i"(SBI_EXT_IPI), "i"(SBI_EXT_IPI_SEND_IPI)
+               : "a0", "a1", "a7", "gp");
+  return ret;
+
+}
+
+
+
+
 struct sbiret inline sbi_set_timer(size_t stime_value) {
   struct sbiret ret;
   asm volatile("mv a0, %1\n"

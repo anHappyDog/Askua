@@ -51,4 +51,9 @@ struct fat32_extended_boot_record {
   u16 fat32_boot_signature;
 } __attribute__((packed, aligned(512)));
 
+
+struct fat_super_block {
+
+};
+
 #endif // __FAT_H__

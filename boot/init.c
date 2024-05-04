@@ -27,23 +27,26 @@ void __PREINIT__() __NORETURN__ _preinit_slave(size_t hartid, void *dtbptr) {
 }
 
 void __TEXT_INIT__ __NORETURN__ _init(size_t hartid, void *dtbptr) {
+  mm_paging(MEM_BASE, MEM_SIZE);
   enable_trap();
   plic_init(SIFIVE_BASE_ADDR, SIFIVE_BASE_SIZE);
   rtc_init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE);
-  mm_paging(MEM_BASE, MEM_SIZE);
-  virtio_blk_init(VIRTIO_BLK_ADDR | VIRTUAL_KERNEL_BASE);
-  printk("hartid: %d\n", hartid);
-  for (int i = 0; i < CORE; i++) {
-    if (i != hartid) {
-      sbi_hart_start(i, (uintptr_t)_start_slave, (uintptr_t)dtbptr);
+  virtio_blk_init(VIRTIO_BLK_ADDR);
+  __LOGO__
+  for (int i = 0; i < 4; ++i) {
+    if (i == hartid) {
+      continue;
     }
+    sbi_hart_start(i, (size_t)_start_slave, 0);
   }
+
   sbi_set_timer(read_time() + 1000000);
   __DEADLOOP__
 }
 
 void __TEXT_INIT__ __NORETURN__ _init_slave(size_t hartid) {
   enable_trap();
+
   sbi_set_timer(read_time() + 1000000);
   __DEADLOOP__
 }
