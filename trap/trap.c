@@ -11,8 +11,7 @@ extern void exc_gen_entry(void);
 void trap_handler(trapframe_t *tf);
 
 void enable_trap(void) {
-  printk("trap_init,entrt is %016lx\n",
-         (size_t)exc_gen_entry);
+  printk("trap_init,entrt is %016lx\n", (size_t)exc_gen_entry);
 
   write_stvec(((size_t)exc_gen_entry) | STVEC_VECTOR);
   write_sie(read_sie() | SIE_SEIE | SIE_STIE | SIE_SSIE);

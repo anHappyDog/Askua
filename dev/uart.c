@@ -45,4 +45,3 @@ static void ns16550a_uart_putchar(u32 c) {
 void uart_putchar(u32 c) { ns16550a_uart.ops->uart_putchar(c); }
 
 u32 uart_getchar() { return ns16550a_uart.ops->uart_getchar(); }
-

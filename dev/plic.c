@@ -13,8 +13,6 @@ struct plic_operations_struct {
   void (*complete)(size_t base, size_t context, u32 irq);
 };
 
-
-
 static struct plic_operations_struct plic_ops = {
     .init = _plic_init,
     .claim = _plic_claim,
@@ -43,7 +41,9 @@ static void _plic_complete(size_t base, size_t context, u32 irq) {
                     0x1000 * context) = irq;
 }
 
-void plic_init(size_t base, size_t size) { plic.ops->init(plic.pm_base | VIRTUAL_KERNEL_BASE, plic.pm_size); }
+void plic_init(size_t base, size_t size) {
+  plic.ops->init(plic.pm_base | VIRTUAL_KERNEL_BASE, plic.pm_size);
+}
 
 inline void _plic_init(size_t base, size_t size) {
   size_t hartid = SMP_GET_HARTID();

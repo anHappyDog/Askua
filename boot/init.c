@@ -1,4 +1,3 @@
-#include <virtio/virtio_blk.h>
 #include <asm/csr.h>
 #include <dev/plic.h>
 #include <dev/rtc.h>
@@ -8,6 +7,7 @@
 #include <sbicall.h>
 #include <smp.h>
 #include <trap.h>
+#include <virtio/virtio_blk.h>
 
 extern void __PREINIT__(.pmm) kpre_mapping(void);
 extern error_t __SECTION__(.text.kmmap)

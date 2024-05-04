@@ -14,10 +14,9 @@
   }
 
 #define DEFINE_W_CSR_PREFUNC(csr)                                              \
-  static inline void  __PREINIT__(.wcsr) write_pre_##csr(size_t __val) {                               \
+  static inline void __PREINIT__(.wcsr) write_pre_##csr(size_t __val) {        \
     asm volatile("csrw " #csr ", %0" ::"r"(__val));                            \
   }
-
 
 DEFINE_W_CSR_FUNC(stvec);
 DEFINE_W_CSR_FUNC(sie);

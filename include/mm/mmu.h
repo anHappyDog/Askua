@@ -35,8 +35,8 @@
     asm volatile("mv sp, %0\n"                                                 \
                  "mv t0, %1\n"                                                 \
                  "mul t0,t0,%2\n"                                              \
-                 "sub sp,sp,t0\n"                                              \
-         ::"r"((VIRTUAL_KERNEL_BASE | PHYSICAL_STACK_BASE) + STACK_SZ),        \
+                 "sub sp,sp,t0\n" ::"r"(                                       \
+                     (VIRTUAL_KERNEL_BASE | PHYSICAL_STACK_BASE) + STACK_SZ),  \
                  "r"(STACK_SZ_PER_CORE), "r"((size_t)hartid));                 \
   });
 

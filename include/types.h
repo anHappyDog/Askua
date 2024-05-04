@@ -27,6 +27,8 @@ typedef unsigned long ulong;
 #define __ALIGN(x) __attribute__((aligned(x)))
 #define __M_INTERRUPT__ __attribute__((interrupt("machine")))
 #define __S_INTERRUPT__ __attribute__((interrupt("supervisor")))
-#define __DEADLOOP__ while(1);
+#define __DEADLOOP__                                                           \
+  while (1)                                                                    \
+    ;
 
 #endif

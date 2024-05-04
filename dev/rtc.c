@@ -7,7 +7,6 @@ static u32 _rtc_irq_is_enabled(void);
 static u32 _rtc_alarm_status(void);
 static u64 _rtc_read_alarm(void);
 
-
 struct rtc_operations_struct {
   void (*init)(size_t base, size_t size);
   u64 (*read_time)(void);
@@ -25,7 +24,6 @@ struct rtc {
   struct rtc_operations_struct *ops;
 };
 
-
 static struct rtc_operations_struct rtc_ops = {
     .init = _rtc_init,
     .read_time = _rtc_read_time,
@@ -42,21 +40,15 @@ static struct rtc goldfish_rtc = {
     .ops = &rtc_ops,
 };
 
-
-
 static u32 _rtc_irq_is_enabled(void) {
   return *(volatile u32 *)(goldfish_rtc.base + VIRTUAL_KERNEL_BASE +
                            GOLDFISH_RTC_IRQ_ENABLED);
 }
 
-
-
 static u32 _rtc_alarm_status(void) {
   return *(volatile u32 *)(goldfish_rtc.base + VIRTUAL_KERNEL_BASE +
                            GOLDFISH_RTC_ALARM_STATUS);
 }
-
-
 
 static u64 _rtc_read_alarm(void) {
   u32 low = *(volatile u32 *)(goldfish_rtc.base + VIRTUAL_KERNEL_BASE +
