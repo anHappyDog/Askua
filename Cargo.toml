@@ -1,0 +1,16 @@
+[package]
+name = "Askua"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lazy_static = { version = "1.4.0", default-features = false, features = [
+    "spin_no_std",
+] }
+
+
+[lib]
+name = "askua"
+path = "kernel/lib.rs"
+
+
