@@ -4,6 +4,10 @@ mod driver;
 mod log;
 mod virtio;
 mod lock;
+mod mm;
+mod fs;
+mod trap;
+mod arch;
 
 #[no_mangle]
 pub extern "C"  fn _init() {

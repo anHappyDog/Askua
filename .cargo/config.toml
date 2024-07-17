@@ -2,7 +2,7 @@
 target = "cfg/rv64.json"
 
 [target.rv64]
-rustflags = ["-C","link-args=-Tlds/rv64.ld -z max-page-size=4096 -Llib/target -lclib"]
+rustflags = ["-C","link-args=-Tlds/rv64.ld -z max-page-size=4096 -z nostart-stop-gc -Llib/target -lclib"]
 # rustc-link-search = ["native=lib/target"]
 # rustc-link-lib = ["static=clib"]
 # rustc-cfg = [""]
