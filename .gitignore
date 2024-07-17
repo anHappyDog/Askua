@@ -3,3 +3,5 @@ dt
 target
 .vscode
 *.img
+tmp
+*.a

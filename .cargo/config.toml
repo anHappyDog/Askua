@@ -1,18 +1,17 @@
 [build]
 target = "cfg/rv64.json"
 
-[target."cfg/rv64.json"]
-runner = "qemu-system-riscv64"
-rustc-flags = ["-C", "link-arg=-Tlds/rv64.ld"]
-rustc-link-search = [""]
-rustc-link-lib = [""]
-rustc-cfg = [""]
-rustc-env = [""]
+[target.rv64]
+rustflags = ["-C","link-args=-Tlds/rv64.ld -z max-page-size=4096 -Llib/target -lclib"]
+# rustc-link-search = ["native=lib/target"]
+# rustc-link-lib = ["static=clib"]
+# rustc-cfg = [""]
+# rustc-env = [""]
 
 
 [target."cfg/aarch64.json"]
 runner = "qemu-system-aarch64"
-rustc-flags = ["-C", "link-arg=-Tlds/aarch64.ld"]
+rustc-flags = []
 rustc-link-search = [""]
 rustc-link-lib = [""]
 rustc-cfg = [""]

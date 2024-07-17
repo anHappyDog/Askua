@@ -4,13 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bitflags = "2.6.0"
 lazy_static = { version = "1.4.0", default-features = false, features = [
     "spin_no_std",
 ] }
 
-
-[lib]
+[[bin]]
 name = "askua"
-path = "kernel/lib.rs"
-
-
+path = "kernel/main.rs"
