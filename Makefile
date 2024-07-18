@@ -14,14 +14,14 @@ else ifeq ($(ARCH),aarch64)
 LD_SCRIPT	:= $(LD_SCRIPT_DIR)/aarch64.ld
 endif
 
+.PHONY: clean
 
-$(TARGET):
+$(TARGET): all
+
+all: 
 	$(MAKE) -C lib
 	$(MAKE) -C fs $(FSTYPE)
 	$(CARGO) build $(CARGO_FLAGS)
-	# $(LD) -Tlds/rv64.ld $(LDFLAGS) -o $(TARGET) $(LIBS)
-
-all: $(TARGET)
 
 run: $(TARGET)
 	$(QEMU) $(QEMU_FLAGS) -kernel $(TARGET)

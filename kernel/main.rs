@@ -2,7 +2,6 @@
 #![no_main]
 mod driver;
 mod log;
-mod virtio;
 mod lock;
 mod mm;
 mod fs;
