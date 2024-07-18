@@ -5,6 +5,8 @@
 
 <input type="checkbox" unchecked disabled> SLAB与BUDDY堆分配
 
+<input type="checkbox" unchecked disabled> 巨页支持
+
 <input type="checkbox" unchecked disabled> 多队列多核多种类调度
 
 <input type="checkbox" unchecked disabled> EXT4
@@ -16,6 +18,8 @@
 <input type="checkbox" unchecked disabled> VIRTIO
 
 <input type="checkbox" unchecked disabled> VGA
+
+<input type="checkbox" unchecked disabled> 设备管理与设备树解析
 
 <input type="checkbox" unchecked disabled> 线程
 

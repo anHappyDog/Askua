@@ -14,3 +14,7 @@ lazy_static = { version = "1.4.0", default-features = false, features = [
 [[bin]]
 name = "askua"
 path = "kernel/main.rs"
+
+
+[[test]]
+name="test"
