@@ -19,6 +19,7 @@ endif
 $(TARGET): all
 
 all: 
+	export RUSTC_WRAPPER=sscache
 	$(MAKE) -C lib
 	$(MAKE) -C fs $(FSTYPE)
 	$(CARGO) build $(CARGO_FLAGS)
