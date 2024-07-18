@@ -1,15 +1,15 @@
 #![no_std]
 #![no_main]
-mod driver;
-mod log;
-mod lock;
-mod mm;
-mod fs;
-mod trap;
 mod arch;
+mod driver;
+mod fs;
+mod lock;
+mod log;
+mod mm;
+mod trap;
 
 #[no_mangle]
-pub extern "C"  fn _init() {
+pub extern "C" fn _init() {
     printk!("Hello,askua.");
     loop {}
 }
