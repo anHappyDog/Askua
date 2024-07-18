@@ -8,4 +8,5 @@ bitflags = "2.6.0"
 
 
 
-
+[build]
+target-dir = "../target"

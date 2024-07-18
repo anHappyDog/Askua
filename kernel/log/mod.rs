@@ -25,7 +25,6 @@ pub fn _print(args: fmt::Arguments) {
     STDOUT.lock().write_fmt(args).unwrap();
 }
 
-
 macro_rules! print {
     ($($arg:tt)*) => {
         $crate::log::_print(format_args!($($arg)*));
@@ -55,4 +54,9 @@ macro_rules! error {
 #[macro_export]
 macro_rules! warning {
     () => {};
+}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
 }

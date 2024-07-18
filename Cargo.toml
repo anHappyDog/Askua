@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 bitflags = "2.6.0"
 elf = { path = "lib/elf" }
+allocator = { path = "lib/allocator" }
 lazy_static = { version = "1.4.0", default-features = false, features = [
     "spin_no_std",
 ] }

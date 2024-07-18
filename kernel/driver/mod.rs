@@ -1,10 +1,12 @@
 use core::ops::Add;
 
 pub mod clint;
+pub mod fdt;
 pub mod plic;
 pub mod rtc;
 pub mod uart;
 pub mod virtio;
+
 pub trait Device {
     fn read_volatile<T>(&self, offset: usize) -> T
     where

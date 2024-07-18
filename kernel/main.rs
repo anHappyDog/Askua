@@ -6,6 +6,7 @@ mod fs;
 mod lock;
 mod log;
 mod mm;
+mod proc;
 mod trap;
 
 #[no_mangle]
@@ -14,7 +15,3 @@ pub extern "C" fn _init() {
     loop {}
 }
 
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}

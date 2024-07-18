@@ -14,6 +14,21 @@ bitflags::bitflags! {
     }
 }
 
+impl From<u16> for ElfHeaderType {
+    fn from(value: u16) -> Self {
+        match value {
+            0 => ElfHeaderType::ET_NONE,
+            1 => ElfHeaderType::ET_REL,
+            2 => ElfHeaderType::ET_EXEC,
+            3 => ElfHeaderType::ET_DYN,
+            4 => ElfHeaderType::ET_CORE,
+            _ => {
+                panic!("Invalid header type");
+            }
+        }
+    }
+}
+
 impl<T> ElfHeader<T>
 where
     T: Clone + Copy + ElfType,
@@ -31,6 +46,43 @@ pub struct ElfIdent {
     ei_osabi: u8,
     ei_abiversion: u8,
     ei_pad: [u8; 7],
+}
+
+impl ElfIdent {
+    pub const ELF_32: u8 = 1;
+    pub const ELF_64: u8 = 2;
+
+    pub fn magic(&self) -> [u8; 4] {
+        self.ei_mag
+    }
+    pub fn class(&self) -> u8 {
+        self.ei_class
+    }
+    pub fn data(&self) -> u8 {
+        self.ei_data
+    }
+    pub fn version(&self) -> u8 {
+        self.ei_version
+    }
+    pub fn osabi(&self) -> u8 {
+        self.ei_osabi
+    }
+    pub fn abiversion(&self) -> u8 {
+        self.ei_abiversion
+    }
+    pub fn from_bytes_copied(data: &[u8]) -> Self {
+        Self {
+            ei_mag: [data[0], data[1], data[2], data[3]],
+            ei_class: data[4],
+            ei_data: data[5],
+            ei_version: data[6],
+            ei_osabi: data[7],
+            ei_abiversion: data[8],
+            ei_pad: [
+                data[9], data[10], data[11], data[12], data[13], data[14], data[15],
+            ],
+        }
+    }
 }
 
 pub struct ElfHeader<T>
@@ -51,6 +103,25 @@ where
     e_shentsize: u16,
     e_shnum: u16,
     e_shstrndx: u16,
+}
+
+impl<T> ElfHeader<T>
+where
+    T: Clone + Copy + ElfType,
+{
+    pub fn from_bytes_copied(data: &[u8]) -> Self {
+        todo!()
+    }
+
+    pub fn ident(&self) -> &ElfIdent {
+        &self.e_ident
+    }
+    pub fn ty(&self) -> ElfHeaderType {
+        ElfHeaderType::from(self.e_type)
+    }
+    pub fn machine(&self) -> u16 {
+        self.e_machine
+    }
 }
 
 pub struct ElfProgramHeader<T>
