@@ -3,33 +3,34 @@
 
 实现计划
 
-<input type="checkbox" unchecked disabled> SLAB与BUDDY堆分配
 
-<input type="checkbox" unchecked disabled> 巨页支持
+- [ ] SLAB与BUDDY堆分配
 
-<input type="checkbox" unchecked disabled> 多队列多核多种类调度
+- [ ] 巨页支持
 
-<input type="checkbox" unchecked disabled> EXT4
+- [ ] 多队列多核多种类调度
 
-<input type="checkbox" unchecked disabled> FAT32
+- [ ] EXT4
 
-<input type="checkbox" unchecked disabled> 网络
+- [ ] FAT32
 
-<input type="checkbox" unchecked disabled> VIRTIO
+- [ ] 网络
 
-<input type="checkbox" unchecked disabled> VGA
+- [ ] VIRTIO
 
-<input type="checkbox" unchecked disabled> 设备管理与设备树解析
+- [ ] VGA
 
-<input type="checkbox" unchecked disabled> 线程
+- [ ] 设备管理与设备树解析
 
-<input type="checkbox" unchecked disabled> 异步IO
+- [ ] 线程
 
-<input type="checkbox" unchecked disabled> ELF文件动态加载与重定位
+- [ ] 异步IO
 
-<input type="checkbox" unchecked disabled> 兼容比赛所需的200个 POSIX syscall
+- [ ] ELF文件动态加载与重定位
 
-<input type="checkbox" unchecked disabled> 移植musl libc busybox
+- [ ] 兼容比赛所需的200个 POSIX syscall
 
-<input type="checkbox" unchecked disabled> 上板实机测试
+- [ ] 移植musl libc busybox
+
+- [ ] 上板实机测试
 
