@@ -50,44 +50,135 @@ pub struct FdtNode<'a> {
     name: &'a [u8],
 }
 
+fn skip_u32_be_nop(data: &[u8], index: &mut usize) -> u32 {
+    loop {
+        let num = get_u32_from_be_data(data, index);
+        if num == FDT_NOP || num == 0 {
+            *index += 4;
+            continue;
+        }
+        return num;
+    }
+}
+
+fn skip_u32_le_nop(data: &[u8], index: &mut usize) -> u32 {
+    loop {
+        let num = get_u32_from_le_data(data, index);
+        if num == FDT_NOP {
+            *index += 4;
+            continue;
+        }
+        return num;
+    }
+}
+
+fn get_elem_name_slice<'a>(data: &'a [u8], index: &mut usize) -> &'a [u8] {
+    if data.len() <= *index {
+        panic!("the data is too short for get the strname.");
+    }
+    let end = data[*index..]
+        .iter()
+        .position(|&x| x == 0)
+        .map_or(data.len(), |pos| *index + pos);
+    let start = *index;
+    *index = end + 1;
+    if *index % 4 != 0 {
+        *index += 4 - (*index % 4);
+    }
+    &data[start..end]
+}
+
 impl<'a> FdtNode<'a> {
     pub fn from_be_bytes(
         data: &'a [u8],
         index: &mut usize,
         offset_string: usize,
     ) -> Result<Arc<Self>, Box<dyn Error>> {
-        let res = get_u32_from_be_data(data, index);
+        let res = skip_u32_be_nop(data, index);
         if res != FDT_BEGIN_NODE {
             return Err(Box::new(FdtNotNodeError));
         }
         *index += 4;
-        let map = BTreeMap::<&[u8], FdtElem>::new();
-        let name 
-        Ok(Arc::new(Self {
-            elems : map,
-            name : ,
-        }))
+        let name = get_elem_name_slice(data, index);
+        let mut map = BTreeMap::<&[u8], FdtElem>::new();
+        loop {
+            let res = skip_u32_be_nop(data, index);
+            match res {
+                FDT_BEGIN_NODE => {
+                    let node = FdtNode::from_be_bytes(data, index, offset_string)?;
+                    map.insert(node.name, FdtElem::Node(node));
+                }
+                FDT_PROP => {
+                    let prop = FdtProperty::from_be_bytes(data, index, offset_string)?;
+                    map.insert(prop.name, FdtElem::Property(prop));
+                }
+                FDT_END_NODE => {
+                    *index += 4;
+                    break;
+                }
+                _ => {
+                    return Err(Box::new(FdtNotNodeError));
+                }
+            }
+        }
+        Ok(Arc::new(Self { elems: map, name }))
     }
     pub fn from_le_bytes(
         data: &'a [u8],
         index: &mut usize,
         offset_string: usize,
     ) -> Result<Arc<Self>, Box<dyn Error>> {
-        todo!()
+        let res = skip_u32_le_nop(data, index);
+        if res != FDT_BEGIN_NODE {
+            return Err(Box::new(FdtNotNodeError));
+        }
+        *index += 4;
+        let name = get_elem_name_slice(data, index);
+        printk!("get node: {}\n", from_utf8(name).unwrap());
+
+        let mut map = BTreeMap::<&[u8], FdtElem>::new();
+        loop {
+            let res = skip_u32_le_nop(data, index);
+            match res {
+                FDT_BEGIN_NODE => {
+                    let node = FdtNode::from_le_bytes(data, index, offset_string)?;
+                    map.insert(node.name, FdtElem::Node(node));
+                }
+                FDT_PROP => {
+                    let prop = FdtProperty::from_le_bytes(data, index, offset_string)?;
+                    map.insert(prop.name, FdtElem::Property(prop));
+                }
+                FDT_END_NODE => {
+                    *index += 4;
+                    break;
+                }
+                _ => {
+                    return Err(Box::new(FdtNotNodeError));
+                }
+            }
+        }
+        Ok(Arc::new(Self { elems: map, name }))
     }
 }
 
 impl<'a> FdtTree<'a> {
-    pub fn from_bytes(data: &'a [u8]) -> Result<Self, Box<dyn Error>> {
+    pub fn from_bytes(ptr: *const u8) -> Result<Self, Box<dyn Error>> {
         let mut index: usize = 0;
+        let data = unsafe { core::slice::from_raw_parts(ptr, 40) as &'static [u8] };
         let magic = get_u32_from_be_data(&data, &mut index);
         let (header, root) = if magic == FDT_MAGIC {
             let header = FdtHeader::from_be_bytes(data)?;
+            let data = unsafe {
+                core::slice::from_raw_parts(ptr, header.totalsize as usize) as &'static [u8]
+            };
             index = header.off_dt_struct as usize;
             let root = FdtNode::from_be_bytes(data, &mut index, header.off_dt_strings as usize)?;
             (header, root)
         } else if magic == FDT_REVERSED_MAGIC {
             let header = FdtHeader::from_le_bytes(data)?;
+            let data = unsafe {
+                core::slice::from_raw_parts(ptr, header.totalsize as usize) as &'static [u8]
+            };
             index = header.off_dt_struct as usize;
             let root = FdtNode::from_le_bytes(data, &mut index, header.off_dt_strings as usize)?;
             (header, root)
@@ -231,7 +322,7 @@ impl<'a> FdtProperty<'a> {
         off_string_block: usize,
     ) -> Result<Self, Box<dyn Error>> {
         let mut data_start = 0;
-        let res = get_u32_from_be_data(data, index);
+        let res = skip_u32_be_nop(data, index);
         if res != FDT_PROP {
             return Err(Box::new(FdtNotPropertyError));
         }
@@ -239,9 +330,12 @@ impl<'a> FdtProperty<'a> {
         let value_len = get_u32_from_be_data(data, index);
         *index += 4;
         let nameoff = get_u32_from_be_data(data, index);
+        *index += 4;
         let value = &data[*index..(*index + value_len as usize)];
         *index += value_len as usize;
-        printk!("fdt property parsed ok!\n");
+        if value_len % 4 != 0 {
+            *index += 4 - (value_len % 4) as usize;
+        }
         Ok(Self {
             name: &get_name_slice(data, off_string_block + nameoff as usize),
             data: &value,
@@ -263,6 +357,9 @@ impl<'a> FdtProperty<'a> {
         let nameoff = get_u32_from_le_data(data, index);
         let value = &data[*index..(*index + value_len as usize)];
         *index += value_len as usize;
+        if value_len % 4 != 0 {
+            *index += 4 - (value_len % 4) as usize;
+        }
         Ok(Self {
             name: &get_name_slice(data, off_string_block + nameoff as usize),
             data: &value,

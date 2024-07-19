@@ -19,11 +19,7 @@ extern crate alloc;
 pub extern "C" fn _init(hartid: usize, dtb: *const u8) -> ! {
     printk!("{} has been selected to be the master core.", hartid);
     use driver::fdt::FdtHeader;
-    unsafe {
-        let tt = core::slice::from_raw_parts(dtb, 40) as &'static [u8];
-        printk!("start to parse the fdt tree.");
-        let fdt_tree = driver::fdt::FdtTree::from_bytes(tt).expect("parse fdt tree failed.");
-    }
+    let fdt_tree = driver::fdt::FdtTree::from_bytes(dtb).expect("parse fdt tree failed.");
     printk!("parse fdt tree finished.");
     loop {}
 }
