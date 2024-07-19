@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 #[repr(C, packed)]
 pub struct Fat32DirEntry {
     name: [u8; 8],

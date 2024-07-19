@@ -4,7 +4,7 @@ TARGET_DIR  := ./target
 DT_DIR      := ./dt
 INC_DIR     := include
 MEMORY      := 256
-NCORE       ?= 2
+NCORE       ?= 4
 
 ROOT_FSIMG  := ext4-fs.img
 FSTYPE 		:= ext4

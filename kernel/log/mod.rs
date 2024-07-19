@@ -25,11 +25,7 @@ pub fn _print(args: fmt::Arguments) {
     STDOUT.lock().write_fmt(args).unwrap();
 }
 
-macro_rules! print {
-    ($($arg:tt)*) => {
-        $crate::log::_print(format_args!($($arg)*));
-    };
-}
+
 
 #[macro_export]
 macro_rules! printk {
@@ -37,7 +33,7 @@ macro_rules! printk {
         $crate::log::_print(format_args!($fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::log::print(format_args!(concat!($fmt, "\n"), $($arg)*));
+        $crate::log::_print(format_args!(concat!($fmt, "\n"), $($arg)*));
     };
 }
 

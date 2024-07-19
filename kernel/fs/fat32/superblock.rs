@@ -1,3 +1,4 @@
+use crate::fs::vfs;
 pub(super) struct Fat32SuperBlock {
     first_data_sector: u32,
     fat_count: u32,
@@ -15,5 +16,6 @@ pub(super) struct Fat32SuperBlock {
     search_cluster_hint: u32,
 }
 
+impl vfs::superblock::SuperBlock for Fat32SuperBlock {}
 
-
+impl Fat32SuperBlock {}

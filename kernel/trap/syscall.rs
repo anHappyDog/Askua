@@ -1,8 +1,6 @@
+use super::context::Context;
+use crate::mm::address::UserObj;
 use crate::sys::{time, ustname};
-
-pub struct UserObj<T> {
-    pub inner: *mut T,
-}
 
 fn sys_times(utms: UserObj<time::Tms>) -> usize {
     unimplemented!()
@@ -28,12 +26,7 @@ fn sys_gettimeofday(utv: UserObj<time::TimeVal>, utz: UserObj<time::TimeZone>) -
     unimplemented!()
 }
 
-fn sys_wait4(
-    pid: usize,
-    status: UserObj<usize>,
-    options: usize,
-    rusage: UserObj<u8>,
-) -> usize {
+fn sys_wait4(pid: usize, status: UserObj<usize>, options: usize, rusage: UserObj<u8>) -> usize {
     unimplemented!()
 }
 
@@ -161,5 +154,3 @@ fn sys_mmap(
 fn sys_munmap(addr: usize, length: usize) -> usize {
     unimplemented!()
 }
-
-

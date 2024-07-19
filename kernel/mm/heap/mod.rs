@@ -2,6 +2,9 @@
 
 extern crate alloc;
 
+mod buddy;
+mod slab;
+
 use core::alloc::{GlobalAlloc, Layout};
 
 pub trait Allocator {}
@@ -17,3 +20,6 @@ unsafe impl GlobalAlloc for Heap {
         unimplemented!()
     }
 }
+
+#[global_allocator]
+static HEAP: Heap = Heap {};

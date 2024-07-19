@@ -8,10 +8,14 @@ mod log;
 mod mm;
 mod proc;
 mod smp;
-mod trap;
 mod sys;
+mod trap;
+
+extern crate alloc;
+
 #[no_mangle]
-pub extern "C" fn _init() {
-    printk!("Hello,askua.");
+pub extern "C" fn _init(hartid: usize, dtb: usize) -> ! {
+    printk!("{} has been selected to be the master core.", hartid);
+
     loop {}
 }

@@ -1,5 +1,3 @@
-
-
 pub struct TimeVal {
     tv_sec: u64,
     tv_usec: u64,
@@ -15,15 +13,14 @@ pub struct TimeZone {
     tz_dsttime: i32,
 }
 
-const DAYS_PER_MONTH : [u32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const DAYS_PER_MONTH: [u32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 #[inline(always)]
 fn is_leap_year(year: u32) -> bool {
-    return ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0));
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 }
 
-
-fn days_since_epoch(year : u32,month : u32,day : u32) -> u32 {
+fn days_since_epoch(year: u32, month: u32, day: u32) -> u32 {
     let mut days = 0;
     for y in 1970..year {
         days += 365;
@@ -47,7 +44,3 @@ pub struct Tms {
     tms_cutime: u64,
     tms_cstime: u64,
 }
-
-
-
-
