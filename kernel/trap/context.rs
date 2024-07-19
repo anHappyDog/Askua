@@ -12,6 +12,6 @@
 // x18 - x27: s2 - s11 (被调用者保存寄存器)
 // x28 - x31: t3 - t6 (临时/可用于调用者保存的寄存器)
 pub struct Context {
-   regs : [usize;32],
-   epc : usize, 
+    regs: [usize; 32],
+    epc: usize,
 }

@@ -2,6 +2,7 @@ use core::ops::Add;
 
 pub mod clint;
 pub mod fdt;
+pub mod nic;
 pub mod plic;
 pub mod rtc;
 pub mod uart;

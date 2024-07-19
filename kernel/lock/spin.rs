@@ -1,7 +1,7 @@
 use core::cell::UnsafeCell;
 use core::sync::atomic::{AtomicBool, Ordering};
 
-pub struct Spinlock<T> {
+pub struct Spinlock<T: ?Sized> {
     lock: AtomicBool,
     data: UnsafeCell<T>,
 }

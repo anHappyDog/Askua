@@ -8,27 +8,11 @@ use crate::driver::Device;
 
 const DEVICE_ID_BLOCK: u32 = 2;
 
-struct VirtioBlkDeivce {
-    base: usize,
-    size: usize,
-    cfg: Option<VirtioBlkConfig>,
+pub trait VirtioBlkDevice {
+    fn read_sectors(&mut self, data: &mut [u8], sector: u64, count: u32) -> Result<(), &'static str>;
+    fn write_sectors(&mut self, data: &[u8], sector: u64, count: u32) -> Result<(), &'static str>;
 }
 
-impl VirtioDevice for VirtioBlkDeivce {}
-impl Device for VirtioBlkDeivce {
-    fn read_volatile<T>(&self, offset: usize) -> T
-    where
-        T: Add,
-    {
-        unsafe { ((self.base + offset) as *const T).read_volatile() }
-    }
-
-    fn write_volatile<T>(&self, offset: usize, value: T) {
-        unsafe {
-            ((self.base + offset) as *mut T).write_volatile(value);
-        }
-    }
-}
 #[repr(C)]
 pub(self) struct VirtioBlkGeometry {
     cylinders: u16,
@@ -61,7 +45,7 @@ pub(self) struct VirtioBlkV0Config {
     max_secure_erase_sectors: u32,
     max_secure_erase_seg: u32,
     secure_erase_sector_alignment: u32,
-    zoned : VirtioBlkZonedCharacteristics,
+    zoned: VirtioBlkZonedCharacteristics,
 }
 
 pub(self) struct VirtioBlkV1Config {}

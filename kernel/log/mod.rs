@@ -25,8 +25,6 @@ pub fn _print(args: fmt::Arguments) {
     STDOUT.lock().write_fmt(args).unwrap();
 }
 
-
-
 #[macro_export]
 macro_rules! printk {
     ($fmt:expr) => {

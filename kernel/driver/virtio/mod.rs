@@ -1,8 +1,19 @@
+use alloc::boxed::Box;
+
 pub mod blk;
 pub mod gpu;
 pub mod net;
-
+pub mod virtq;
 pub trait VirtioDevice {}
+pub trait VirtioMMIODeivce {
+    fn mmio_init(base: usize, size: usize) -> Result<Box<Self>, &'static str>;
+}
+pub trait VirtioPCIDevice {
+    fn pci_init() -> Self;
+}
+pub trait VirtioChannelIODevice {
+    fn channel_init() -> Self;
+}
 
 const ACKNOWLEDGE: u32 = 1;
 const DRIVER: u32 = 2;

@@ -169,6 +169,4 @@ struct VirtioGpuResourceDetachBacking {
     padding: u32,
 }
 
-
-const DEVICE_ID : u32 = 18;
-
+const DEVICE_ID: u32 = 18;

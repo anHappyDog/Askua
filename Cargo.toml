@@ -17,4 +17,9 @@ path = "kernel/main.rs"
 
 
 [[test]]
-name="test"
+name = "test"
+
+[features]
+default = []
+signle-core = []
+multi-core = []

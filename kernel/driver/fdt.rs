@@ -38,4 +38,3 @@ struct FdtReserveEntry {
     address: u64,
     size: u64,
 }
-
