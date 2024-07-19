@@ -19,6 +19,8 @@ CFLAGS          += --std=gnu99 -mcmodel=medany -ffreestanding -fno-stack-protect
 CARGO_FLAGS		:= 
 CARGO 			:= cargo
 QEMU            := qemu-system-riscv64
+DTC 			:= dtc
+
 
 ifeq ($(VERSION), debug)
 	CFLAGS += -g -O0

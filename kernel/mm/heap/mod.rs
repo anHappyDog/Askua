@@ -1,5 +1,3 @@
-#![no_std]
-
 extern crate alloc;
 
 mod buddy;
@@ -34,7 +32,7 @@ impl HeapPolicy {
     }
 }
 
-struct NormalHeapPolicy {
+pub(super) struct NormalHeapPolicy {
     slab_allocator: Spinlock<slab::SlabAllocator>,
     buddy_allocator: Spinlock<buddy::BuddyAllocator>,
 }

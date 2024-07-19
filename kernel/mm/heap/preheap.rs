@@ -9,7 +9,7 @@ const PREHEAP_SIZE: usize = 0x1000 * 16;
 /// the fdt and some other kernel obj's allocation,
 /// which will never be freed, which means their
 /// lifetime is quite static.
-pub(super) struct PreHeapPolicy {
+pub struct PreHeapPolicy {
     data: [u8; PREHEAP_SIZE],
     current: usize,
 }

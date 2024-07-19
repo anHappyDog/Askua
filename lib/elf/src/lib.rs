@@ -1,5 +1,5 @@
 #![no_std]
-
+#![cfg_attr(debug_assertions, allow(unused))]
 pub mod header;
 pub mod reloc;
 pub mod section;

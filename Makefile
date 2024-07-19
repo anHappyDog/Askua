@@ -36,6 +36,14 @@ gdb-run:
 objdump:all
 	$(OBJDUMP) -DS $(TARGET) > $(TARGET).asm
 
+dtb:
+	$(QEMU) $(QEMU_FLAGS),dumpdtb=askua.dtb
+
+dts:dtb
+	$(DTC) -I dtb -O dts askua.dtb > askua.dts
+
+
 clean:
 	cargo clean
-	$(MAKE) -C lib clean
+	$(MAKE) -C lib clean 
+	-rm -rf *.dtb *.dts
