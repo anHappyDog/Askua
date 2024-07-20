@@ -94,8 +94,8 @@ struct VirtqBlkReq<'a> {
 }
 
 // virtio_blk_req type
-pub(self) const VIRTIO_BLK_T_IN: usize = 0;
-pub(self) const VIRTIO_BLK_T_OUT: usize = 1;
+pub(self) const VIRTIO_BLK_T_IN: u32 = 0;
+pub(self) const VIRTIO_BLK_T_OUT: u32 = 1;
 pub(self) const VIRTIO_BLK_T_FLUSH: usize = 4;
 pub(self) const VIRTIO_BLK_T_GET_ID: usize = 8;
 pub(self) const VIRTIO_BLK_T_GET_LIFETIME: usize = 10;
@@ -113,3 +113,5 @@ pub(self) const VIRTIO_F_ACCESS_PLATFORM: usize = 33 - 32;
 pub(self) const VIRTIO_F_EVENT_IDX: usize = 29;
 pub(self) const VIRTIO_F_INDIRECT_DESC: usize = 28;
 pub(self) const VIRTIO_F_RING_RESET: usize = 40 - 32;
+
+pub(self) const VIRTIO_BLK_S_OK: u8 = 0;

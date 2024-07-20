@@ -4,10 +4,15 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use super::{
-    VirtioBlkConfig, VirtioBlkDevice, VIRTIO_BLK_F_MQ, VIRTIO_BLK_F_RO, VIRTIO_F_EVENT_IDX,
-    VIRTIO_F_INDIRECT_DESC, VIRTIO_F_NOTIFICATION_DATA, VIRTIO_F_RING_PACKED,
+    VirtioBlkConfig, VirtioBlkDevice, VirtqBlkReq, VIRTIO_BLK_F_MQ, VIRTIO_BLK_F_RO,
+    VIRTIO_BLK_T_IN, VIRTIO_F_EVENT_IDX, VIRTIO_F_INDIRECT_DESC, VIRTIO_F_NOTIFICATION_DATA,
+    VIRTIO_F_RING_PACKED,
 };
-use crate::driver::virtio::virtq::{Virtq, VIRTQ_AVAIL_F_NO_INTERRUPT, VIRTQ_DESC_LIST_LENGTH};
+use crate::driver::virtio::blk::{VIRTIO_BLK_S_OK, VIRTIO_BLK_T_OUT};
+use crate::driver::virtio::virtq::{
+    Virtq, VIRTQ_AVAIL_F_NO_INTERRUPT, VIRTQ_DESC_F_NEXT, VIRTQ_DESC_F_WRITE,
+    VIRTQ_DESC_LIST_LENGTH,
+};
 use crate::driver::virtio::{ACKNOWLEDGE, DRIVER, DRIVER_OK, FEATURE_OK};
 use crate::driver::{virtio::VirtioMMIODeivce, Device};
 use crate::mm::page::PAGE_SIZE;
@@ -73,6 +78,8 @@ impl Device for VirtioBlkMMIODeivce {
     }
 }
 
+const MAX_USED_DESC_ONCE_CNT: usize = 32;
+
 impl VirtioBlkDevice for VirtioBlkMMIODeivce {
     fn read_sectors(
         &mut self,
@@ -83,12 +90,100 @@ impl VirtioBlkDevice for VirtioBlkMMIODeivce {
         if data.len() < self.sector_size * count as usize {
             return Err("the data buffer is too short for conatining the data.");
         }
-
+        let mut alloced_desc_list: [u16; MAX_USED_DESC_ONCE_CNT] = [0; MAX_USED_DESC_ONCE_CNT];
+        let mut used_desc = 0;
+        let mut req = VirtqBlkReq {
+            sector,
+            type_: VIRTIO_BLK_T_IN as u32,
+            data,
+            reserved: 0,
+            status: 0,
+        };
+        let need_desc: usize = count as usize + 2;
+        if need_desc > MAX_USED_DESC_ONCE_CNT {
+            return Err("the data request is too large to finish in one time.");
+        }
+        for i in 0..need_desc {
+            alloced_desc_list[used_desc] = self.vq.desc_alloc().ok_or("no free desc currently.")?;
+            used_desc += 1;
+        }
+        let idx = self.vq.get_desc_idx();
+        let desc = self.vq.get_desc_mut(alloced_desc_list[0]);
+        desc.set_addr(&req as *const _ as u64);
+        desc.set_len(16);
+        desc.set_flags(VIRTQ_DESC_F_NEXT as u16);
+        desc.set_next(alloced_desc_list[1] as u16);
+        for i in 1..need_desc - 1 {
+            let desc = self.vq.get_desc_mut(alloced_desc_list[i]);
+            desc.set_addr(
+                data.as_ptr()
+                    .wrapping_add((i - 1) * self.sector_size as usize) as u64,
+            );
+            desc.set_flags((VIRTQ_DESC_F_NEXT | VIRTQ_DESC_F_WRITE) as u16);
+            desc.set_len(self.sector_size as u32);
+            desc.set_next(alloced_desc_list[i as usize + 1] as u16);
+        }
+        let mut desc = self.vq.get_desc_mut(alloced_desc_list[need_desc - 1]);
+        desc.set_addr(&req.status as *const _ as u64);
+        desc.set_flags(VIRTQ_DESC_F_WRITE);
+        desc.set_len(1);
+        desc.set_next(0);
+        self.vq.fill_avail(alloced_desc_list[0]);
+        self.write_volatile::<u32>(MMIO_QUEUE_NOTIFY_OFFSET, 0);
+        while idx + 1 != self.vq.get_used_idx() {}
+        assert!(req.status == VIRTIO_BLK_S_OK);
+        //free the desc
         Ok(())
     }
 
     fn write_sectors(&mut self, data: &[u8], sector: u64, count: u32) -> Result<(), &'static str> {
-        unimplemented!("")
+        if data.len() < self.sector_size * count as usize {
+            return Err("the data buffer is too short for conatining the data.");
+        }
+        let mut alloced_desc_list: [u16; MAX_USED_DESC_ONCE_CNT] = [0; MAX_USED_DESC_ONCE_CNT];
+        let mut used_desc = 0;
+        let mut req = VirtqBlkReq {
+            sector,
+            type_: VIRTIO_BLK_T_OUT,
+            data,
+            reserved: 0,
+            status: 0,
+        };
+        let need_desc: usize = count as usize + 2;
+        if need_desc > MAX_USED_DESC_ONCE_CNT {
+            return Err("the data request is too large to finish in one time.");
+        }
+        for i in 0..need_desc {
+            alloced_desc_list[used_desc] = self.vq.desc_alloc().ok_or("no free desc currently.")?;
+            used_desc += 1;
+        }
+        let idx = self.vq.get_desc_idx();
+        let desc = self.vq.get_desc_mut(alloced_desc_list[0]);
+        desc.set_addr(&req as *const _ as u64);
+        desc.set_len(16);
+        desc.set_flags(VIRTQ_DESC_F_NEXT as u16);
+        desc.set_next(alloced_desc_list[1] as u16);
+        for i in 1..need_desc - 1 {
+            let desc = self.vq.get_desc_mut(alloced_desc_list[i]);
+            desc.set_addr(
+                data.as_ptr()
+                    .wrapping_add((i - 1) * self.sector_size as usize) as u64,
+            );
+            desc.set_flags((VIRTQ_DESC_F_NEXT) as u16);
+            desc.set_len(self.sector_size as u32);
+            desc.set_next(alloced_desc_list[i as usize + 1] as u16);
+        }
+        let mut desc = self.vq.get_desc_mut(alloced_desc_list[need_desc - 1]);
+        desc.set_addr(&req.status as *const _ as u64);
+        desc.set_flags(VIRTQ_DESC_F_WRITE);
+        desc.set_len(1);
+        desc.set_next(0);
+        self.vq.fill_avail(alloced_desc_list[0]);
+        self.write_volatile::<u32>(MMIO_QUEUE_NOTIFY_OFFSET, 0);
+        while idx + 1 != self.vq.get_used_idx() {}
+        assert!(req.status == VIRTIO_BLK_S_OK);
+        //free the desc
+        Ok(())
     }
 }
 
@@ -106,6 +201,12 @@ impl VirtioBlkMMIODeivce {
         let desc_addr = self.vq.desc_addr();
         let avail_addr = self.vq.avail_addr();
         let used_addr = self.vq.used_addr();
+        printk!(
+            "desc_addr: {:#x}, avail_addr: {:#x}, used_addr: {:#x}\n",
+            desc_addr,
+            avail_addr,
+            used_addr
+        );
         self.write_volatile::<u32>(MMIO_QUEUE_DESC_LOW_OFFSET, desc_addr as u32);
         self.write_volatile::<u32>(MMIO_QUEUE_DESC_HIGH_OFFSET, (desc_addr >> 32) as u32);
         self.write_volatile::<u32>(MMIO_QUEUE_DRIVER_LOW_OFFSET, avail_addr as u32);
@@ -125,15 +226,15 @@ impl VirtioBlkMMIODeivce {
 
 impl VirtioMMIODeivce for VirtioBlkMMIODeivce {
     fn mmio_init(base: usize, size: usize) -> Result<Box<Self>, &'static str> {
+        let mut features: u32 = 0;
+        let mut status: u32 = 0;
         let mut device = Box::new(VirtioBlkMMIODeivce {
             base,
             size,
             sector_size: 512,
-            vq: Box::new(Virtq::init()),
+            vq: Virtq::init(),
             cfg: None,
         });
-        let mut features: u32 = 0;
-        let mut status: u32 = 0;
         device.check_magic()?;
         let version = device.read_volatile::<u32>(MMIO_VERSION_OFFSET);
         device.write_volatile::<u32>(MMIO_STATUS_OFFSET, status);
@@ -151,8 +252,8 @@ impl VirtioMMIODeivce for VirtioBlkMMIODeivce {
         device.write_volatile::<u32>(MMIO_DRIVER_FEATURES_OFFSET, features);
         device.write_volatile::<u32>(MMIO_DEVICE_FEATURES_SEL_OFFSET, 1);
         features = device.read_volatile::<u32>(MMIO_DEVICE_FEATURES_OFFSET);
-        features &= !(1 << VIRTIO_F_NOTIFICATION_DATA);
-        features &= !(1 << VIRTIO_F_RING_PACKED);
+        // features &= !(1 << VIRTIO_F_NOTIFICATION_DATA);
+        // features &= !(1 << VIRTIO_F_RING_PACKED);
         device.write_volatile::<u32>(MMIO_DRIVER_FEATURES_SEL_OFFSET, 1);
         device.write_volatile::<u32>(MMIO_DRIVER_FEATURES_OFFSET, features);
         status |= FEATURE_OK;
@@ -172,7 +273,7 @@ impl VirtioMMIODeivce for VirtioBlkMMIODeivce {
         }
         if version == VIRTIO_BLK_LEGACY_VERSION {
             device.legacy_queue_init()?;
-        } else if version == 1 {
+        } else if version == VIRTIO_BLK_MODERN_VERSION {
             device.queue_init()?;
         } else {
             return Err("the version is not supported.");
@@ -183,4 +284,5 @@ impl VirtioMMIODeivce for VirtioBlkMMIODeivce {
     }
 }
 
-const VIRTIO_BLK_LEGACY_VERSION: u32 = 0;
+const VIRTIO_BLK_LEGACY_VERSION: u32 = 1;
+const VIRTIO_BLK_MODERN_VERSION: u32 = 2;

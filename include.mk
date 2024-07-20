@@ -12,7 +12,7 @@ FSTYPE 		:= ext4
 CROSS_COMPILE   := riscv64-unknown-elf-
 QEMU_FLAGS      := -smp $(NCORE) -m $(MEMORY) -nographic \
                     -device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0 \
-                    -drive if=none,file=fs/$(ROOT_FSIMG),format=raw,id=hd0 -M virt
+                 -global virtio-mmio.force-legacy=true -drive if=none,file=fs/$(ROOT_FSIMG),format=raw,id=hd0 -M virt
 LDFLAGS         := -EL -m elf64lriscv -static -n -nostdlib --relax  -z max-page-size=4096
 CFLAGS          += --std=gnu99 -mcmodel=medany -ffreestanding -fno-stack-protector -fno-builtin \
                     -ffunction-sections -fno-pic -march=rv64g -mabi=lp64d -fno-omit-frame-pointer
