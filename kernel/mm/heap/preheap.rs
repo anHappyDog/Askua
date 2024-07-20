@@ -1,8 +1,8 @@
 use core::alloc::{GlobalAlloc, Layout};
 
-use crate::driver::plic::sifive;
+use crate::{driver::plic::sifive, printk};
 
-const PREHEAP_SIZE: usize = 0x1000 * 16;
+const PREHEAP_SIZE: usize = 0x1000 * 20;
 
 #[repr(align(4096))]
 /// Acutally I have to say that this is used for
@@ -24,6 +24,7 @@ impl PreHeapPolicy {
         }
     }
     pub(super) fn alloc(&mut self, layout: Layout) -> *mut u8 {
+        printk!("PreHeap alloc: {:#x} -> {:#x}\n", self.current, self.current + layout.size());
         let align = layout.align();
         let size = layout.size();
         let current = (self.current + align - 1) & !(align - 1);
@@ -31,6 +32,7 @@ impl PreHeapPolicy {
         if next > PREHEAP_SIZE {
             panic!("PreHeap OOM");
         }
+        printk!("PreHeap alloc: {:#x} -> {:#x}\n", current, next);
         self.current = next;
         &mut self.data[current] as *mut u8
     }

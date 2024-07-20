@@ -1,28 +1,43 @@
-const VIRTQ_DESC_LIST_LENGTH: usize = 256;
-#[repr(C)]
-pub struct VirtqDescList {
-    bitmap: [u8; (VIRTQ_DESC_LIST_LENGTH + 7) >> 3],
-    desc_list: [VirtqDesc; VIRTQ_DESC_LIST_LENGTH],
-}
+use alloc::vec::Vec;
+
+pub(super) const VIRTQ_DESC_LIST_LENGTH: usize = 4;
 
 #[repr(C, align(4096))]
 pub(super) struct Virtq {
-    desc: VirtqDesc,
+    desc_list: [VirtqDesc; VIRTQ_DESC_LIST_LENGTH],
     avail: VirtqAvail,
     used: VirtqUsed,
+    bitmap: [u8; (VIRTQ_DESC_LIST_LENGTH + 7) / 8],
 }
 
 impl Virtq {
     pub fn init() -> Self {
         Self {
-            desc: VirtqDesc::init(),
+            desc_list: [VirtqDesc::init(); VIRTQ_DESC_LIST_LENGTH],
             avail: VirtqAvail::init(),
             used: VirtqUsed::init(),
+            bitmap: [0; (VIRTQ_DESC_LIST_LENGTH + 7) / 8],
         }
+    }
+    pub fn desc_addr(&self) -> usize {
+        &self.desc_list as *const _ as usize
+    }
+    pub fn avail_addr(&self) -> usize {
+        &self.avail as *const _ as usize
+    }
+    pub fn used_addr(&self) -> usize {
+        &self.used as *const _ as usize
+    }
+    pub fn set_avail_flags(&mut self, flags: u16) {
+        self.avail.flags = flags;
+    }
+    pub fn self_addr(&self) -> usize {
+        self as *const _ as usize
     }
 }
 
-#[repr(C, packed)]
+#[repr(C, align(16))]
+#[derive(Clone, Copy)]
 pub(super) struct VirtqDesc {
     addr: u64,
     len: u32,
@@ -43,7 +58,7 @@ impl VirtqDesc {
 
 const VIRTQ_QUEUE_SIZE: usize = 256;
 
-#[repr(C, packed)]
+#[repr(C, align(2))]
 pub(super) struct VirtqAvail {
     flags: u16,
     idx: u16,
@@ -88,8 +103,9 @@ impl VirtqUsed {
     }
 }
 
-const VIRTQ_USED_F_NO_NOTIFY: u32 = 1;
-const VIRTQ_AVAIL_F_NO_INTERRUPT: u32 = 1;
-const VIRTQ_DESC_F_NEXT: u32 = 1;
-const VIRTQ_DESC_F_WRITE: u32 = 2;
-const VIRTQ_DESC_F_INDERECT: u32 = 4;
+pub(super) const VIRTQ_USED_F_NO_NOTIFY: u32 = 1;
+pub(super) const VIRTQ_AVAIL_F_NO_INTERRUPT: u32 = 1;
+pub(super) const VIRTQ_DESC_F_NEXT: u32 = 1;
+pub(super) const VIRTQ_DESC_F_WRITE: u32 = 2;
+pub(super) const VIRTQ_DESC_F_INDERECT: u32 = 4;
+

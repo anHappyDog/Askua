@@ -23,3 +23,6 @@ pub struct Page<T: PageSize> {
     number: usize,
     size: PhantomData<T>,
 }
+
+
+pub const PAGE_SIZE : usize = 4096;

@@ -9,7 +9,12 @@ use crate::driver::Device;
 const DEVICE_ID_BLOCK: u32 = 2;
 
 pub trait VirtioBlkDevice {
-    fn read_sectors(&mut self, data: &mut [u8], sector: u64, count: u32) -> Result<(), &'static str>;
+    fn read_sectors(
+        &mut self,
+        data: &mut [u8],
+        sector: u64,
+        count: u32,
+    ) -> Result<(), &'static str>;
     fn write_sectors(&mut self, data: &[u8], sector: u64, count: u32) -> Result<(), &'static str>;
 }
 
@@ -97,3 +102,14 @@ pub(self) const VIRTIO_BLK_T_GET_LIFETIME: usize = 10;
 pub(self) const VIRTIO_BLK_T_DISCARD: usize = 11;
 pub(self) const VIRTIO_BLK_T_WRITE_ZEROES: usize = 13;
 pub(self) const VIRTIO_BLK_T_SECURE_ERASE: usize = 14;
+
+pub(self) const VIRTIO_F_NOTIFICATION_DATA: usize = 38 - 32;
+pub(self) const VIRTIO_F_NOTIF_CONFIG_DATA: usize = 39 - 32;
+pub(self) const VIRTIO_F_ORDER_PLATFORM: usize = 36 - 32;
+pub(self) const VIRTIO_F_IN_ORDER: usize = 35 - 32;
+pub(self) const VIRTIO_F_RING_PACKED: usize = 34 - 32;
+pub(self) const VIRTIO_F_VERSION_1: usize = 32 - 32;
+pub(self) const VIRTIO_F_ACCESS_PLATFORM: usize = 33 - 32;
+pub(self) const VIRTIO_F_EVENT_IDX: usize = 29;
+pub(self) const VIRTIO_F_INDIRECT_DESC: usize = 28;
+pub(self) const VIRTIO_F_RING_RESET: usize = 40 - 32;

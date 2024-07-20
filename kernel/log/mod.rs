@@ -52,5 +52,6 @@ macro_rules! warning {
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
+    printk!("panic: {:?}", _info);
     loop {}
 }
