@@ -1,3 +1,5 @@
+use crate::fs::vfs::inode::Inode;
+
 struct Ext4Inode {
     i_mode: u16,
     i_uid: u16,
@@ -27,3 +29,5 @@ struct Ext4Inode {
     i_version_hi: u32,
     i_projid: u32,
 }
+
+impl Inode for Ext4Inode {}

@@ -1,5 +1,6 @@
 use core::ops::Add;
 
+pub mod sdcard;
 pub mod clint;
 pub mod fdt;
 pub mod nic;

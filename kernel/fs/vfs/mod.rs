@@ -1,6 +1,6 @@
 mod dentry;
-mod file_system;
-mod inode;
-mod mount;
-pub mod superblock;
 mod file;
+mod file_system;
+pub(super) mod inode;
+mod mount;
+pub(super) mod superblock;

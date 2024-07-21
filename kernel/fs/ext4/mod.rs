@@ -8,8 +8,17 @@ mod mmp;
 mod superblock;
 mod xattr;
 
-use super::Fs;
+use alloc::sync::Arc;
+use superblock::Ext4SuperBlock;
 
-struct Ext4Fs;
+use crate::lock::irq_safe::spin::IrqSafeSpinlock;
+
+use super::{Fs, FsDev};
+
+struct Ext4Fs {
+    superblock: Arc<IrqSafeSpinlock<Ext4SuperBlock>>,
+    dev: FsDev,
+    
+}
 
 impl Fs for Ext4Fs {}

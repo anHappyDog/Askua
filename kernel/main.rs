@@ -10,13 +10,12 @@ mod arch;
 mod driver;
 mod errno;
 mod fs;
+mod klib;
 mod lock;
 mod log;
 mod mm;
 mod proc;
-mod signal;
 mod smp;
-mod sys;
 mod trap;
 
 extern crate alloc;
@@ -33,9 +32,6 @@ pub extern "C" fn _init(hartid: usize, dtb: *const u8) -> ! {
     printk!("{} has been selected to be the master core.\n", hartid);
     mm::init();
     trap::init();
-    unsafe {
-        let t1 = *unsafe { 0xa0000000 as *const u32 };
-    }
     proc::init();
     fs::init();
     // then start to schedule

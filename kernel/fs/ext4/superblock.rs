@@ -1,4 +1,4 @@
-struct Ext4SuperBlock {
+pub(super) struct Ext4SuperBlock {
     s_inodes_count: u32,
     s_blocks_count_lo: u32,
     s_r_blocks_count_lo: u32,

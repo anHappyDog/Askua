@@ -1,6 +1,6 @@
 use super::context::UserContext;
+use crate::klib::sys::{time, ustname};
 use crate::mm::address::UserObj;
-use crate::sys::{time, ustname};
 
 fn sys_times(utms: UserObj<time::Tms>) -> usize {
     unimplemented!()
