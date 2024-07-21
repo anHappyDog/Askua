@@ -1,4 +1,4 @@
-mod dentry;
+pub mod dentry;
 mod file;
 mod file_system;
 pub(super) mod inode;

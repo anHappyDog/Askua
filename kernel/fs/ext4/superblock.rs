@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+
 pub(super) struct Ext4SuperBlock {
     s_inodes_count: u32,
     s_blocks_count_lo: u32,
@@ -104,4 +106,7 @@ pub(super) struct Ext4SuperBlock {
 
 impl Ext4SuperBlock {
     const SUPER_BLOCK_MAGIC: u16 = 0xEF53;
+    pub(super) fn empty() -> Box<Self> {
+        todo!("return an empty superblock.")
+    }
 }

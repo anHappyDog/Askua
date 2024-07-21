@@ -1,6 +1,8 @@
+use alloc::boxed::Box;
+
 use crate::fs::vfs::inode::Inode;
 
-struct Ext4Inode {
+pub(super) struct Ext4Inode {
     i_mode: u16,
     i_uid: u16,
     i_size_lo: u32,
@@ -31,3 +33,9 @@ struct Ext4Inode {
 }
 
 impl Inode for Ext4Inode {}
+
+impl Ext4Inode {
+    pub(super) fn empty() -> Box<Self> {
+        todo!("return an empty inode.")
+    }
+}

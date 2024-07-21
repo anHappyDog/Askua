@@ -1,5 +1,1 @@
-
-
-struct Dentry {
-    
-}
+pub struct Dentry {}

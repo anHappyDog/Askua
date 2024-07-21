@@ -1,4 +1,4 @@
-use alloc::sync::Arc;
+use alloc::{boxed::Box, sync::Arc};
 
 use crate::{driver::virtio::blk::VirtioBlkDevice, lock::irq_safe::spin::IrqSafeSpinlock};
 
@@ -10,8 +10,8 @@ pub mod vfs;
 
 pub(self) trait Fs {}
 
-pub(self) enum FsDev {
-    VirtioBlk(Arc<IrqSafeSpinlock<dyn VirtioBlkDevice>>),
+pub(crate) enum FsDev {
+    VirtioBlk(Arc<IrqSafeSpinlock<Box<dyn VirtioBlkDevice>>>),
 }
 
 pub(super) fn init() {}
