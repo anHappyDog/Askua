@@ -8,7 +8,7 @@ use core::alloc::{GlobalAlloc, Layout};
 
 use preheap::PreHeapPolicy;
 
-use crate::lock::spin::Spinlock;
+use crate::lock::{irq_safe::spin::IrqSafeSpinlock, spin::Spinlock};
 
 pub(self) trait Allocator {}
 
@@ -33,8 +33,8 @@ impl HeapPolicy {
 }
 
 pub(super) struct NormalHeapPolicy {
-    slab_allocator: Spinlock<slab::SlabAllocator>,
-    buddy_allocator: Spinlock<buddy::BuddyAllocator>,
+    slab_allocator: IrqSafeSpinlock<slab::SlabAllocator>,
+    buddy_allocator: IrqSafeSpinlock<buddy::BuddyAllocator>,
 }
 
 impl NormalHeapPolicy {

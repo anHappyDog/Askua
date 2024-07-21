@@ -1,6 +1,6 @@
 use crate::{
     driver::uart::{ns16550a::Ns16550a, Uart},
-    lock::spin::Spinlock,
+    lock::{irq_safe::spin::IrqSafeSpinlock},
 };
 use core::fmt::{self, Write};
 const NS16550A_BASE: usize = 0x10000000;
@@ -8,8 +8,8 @@ const NS16550A_BASE: usize = 0x10000000;
 pub struct Stdout;
 
 lazy_static::lazy_static! {
-    static ref NS16550A : Spinlock<Ns16550a> = Spinlock::new(Ns16550a::init(NS16550A_BASE, 0));
-    static ref STDOUT : Spinlock<Stdout> = Spinlock::new(Stdout);
+    static ref NS16550A : IrqSafeSpinlock<Ns16550a> = IrqSafeSpinlock::new(Ns16550a::init(NS16550A_BASE, 0));
+    static ref STDOUT : IrqSafeSpinlock<Stdout> = IrqSafeSpinlock::new(Stdout);
 }
 
 impl fmt::Write for Stdout {

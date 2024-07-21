@@ -1,7 +1,7 @@
 use core::ops::Add;
 
 use super::Rtc;
-use crate::{driver::Device, lock::spin::Spinlock};
+use crate::{driver::Device, lock::irq_safe::spin::IrqSafeSpinlock};
 pub struct Goldfish {
     base: usize,
     size: usize,
@@ -18,7 +18,7 @@ const GOLDFISH_RTC_IRQ_ENABLE: usize = 0x10;
 const GOLDFISH_RTC_ALARM_STATUS: usize = 0x18;
 
 lazy_static::lazy_static! {
-    pub static ref GOLDFISH_RTC : Spinlock<Goldfish> = Spinlock::new(Goldfish::init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE));
+    pub static ref GOLDFISH_RTC : IrqSafeSpinlock<Goldfish> = IrqSafeSpinlock::new(Goldfish::init(GOLDFISH_RTC_BASE, GOLDFISH_RTC_SIZE));
 }
 
 impl Rtc for Goldfish {

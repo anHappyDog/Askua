@@ -1,47 +1,56 @@
 use super::Reg;
 use core::arch::asm;
-
 macro_rules! DEFINE_SYSREG {
-    ($name:ident, $num:expr) => {
+    ($name:ident, $csr_name:expr) => {
         pub struct $name;
 
         impl Reg for $name {
+            
+            #[inline(always)]
             fn read() -> usize {
                 let value: usize;
                 unsafe {
                     asm!(
-                        "csrr {}, {}",
+                        concat!("csrr {}, ", $csr_name),
                         out(reg) value,
-                        const $num,
                         options(nostack)
                     );
                 }
                 value
             }
-
+            #[inline(always)]
             fn write(value: usize) {
                 unsafe {
                     asm!(
-                        "csrw {}, {}",
+                        concat!("csrw ", $csr_name, ", {}"),
                         in(reg) value,
-                        const $num,
                         options(nostack)
                     );
                 }
             }
         }
     };
-    () => {};
 }
 
-DEFINE_SYSREG!(Sstatus, 0x100);
-DEFINE_SYSREG!(Sedeleg, 0x102);
-DEFINE_SYSREG!(Sideleg, 0x103);
-DEFINE_SYSREG!(Sie, 0x104);
-DEFINE_SYSREG!(Stvec, 0x105);
-DEFINE_SYSREG!(Scounteren, 0x106);
-DEFINE_SYSREG!(Sscratch, 0x140);
-DEFINE_SYSREG!(Sepc, 0x141);
-DEFINE_SYSREG!(Scause, 0x142);
-DEFINE_SYSREG!(Stval, 0x143);
-DEFINE_SYSREG!(Sip, 0x144);
+DEFINE_SYSREG!(Sstatus, "sstatus");
+DEFINE_SYSREG!(Sedeleg, "sedeleg");
+DEFINE_SYSREG!(Sideleg, "sideleg");
+DEFINE_SYSREG!(Sie, "sie");
+DEFINE_SYSREG!(Stvec, "stvec");
+DEFINE_SYSREG!(Scounteren, "scounteren");
+DEFINE_SYSREG!(Sscratch, "sscratch");
+DEFINE_SYSREG!(Sepc, "sepc");
+DEFINE_SYSREG!(Scause, "scause");
+DEFINE_SYSREG!(Stval, "stval");
+DEFINE_SYSREG!(Sip, "sip");
+
+impl Sstatus {
+    const SIE: usize = 1 << 1;
+    const SPIE: usize = 1 << 5;
+    const SPP: usize = 1 << 8;
+    pub fn clear_sie() {
+        let mut value = Self::read();
+        value &= !Self::SIE;
+        Self::write(value);
+    }
+}

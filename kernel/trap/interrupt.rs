@@ -12,3 +12,7 @@ fn s_extern_int() {}
 
 #[cfg(target_arch = "riscv64")]
 fn s_software_int() {}
+
+pub fn instr_on() {}
+
+pub fn instr_off() {}
