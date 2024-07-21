@@ -1,6 +1,7 @@
 use crate::{
+    arch::rv64::sbi::sbi_shutdown,
     driver::uart::{ns16550a::Ns16550a, Uart},
-    lock::{irq_safe::spin::IrqSafeSpinlock},
+    lock::irq_safe::spin::IrqSafeSpinlock,
 };
 use core::fmt::{self, Write};
 const NS16550A_BASE: usize = 0x10000000;
@@ -53,5 +54,5 @@ macro_rules! warning {
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     printk!("panic: {:?}", _info);
-    loop {}
+    sbi_shutdown();
 }

@@ -3,7 +3,9 @@
 #![no_main]
 #![feature(asm_const)]
 
-use driver::virtio::{blk::mmio::VirtioBlkMMIODeivce, mmio::VirtioMMIODeivce};
+use driver::virtio::{
+    blk::mmio::VirtioBlkMMIODeivce, mmio::VirtioMMIODeivce, net::mmio::VirtioNetMMIODeivce,
+};
 mod arch;
 mod driver;
 mod errno;
@@ -12,6 +14,7 @@ mod lock;
 mod log;
 mod mm;
 mod proc;
+mod signal;
 mod smp;
 mod sys;
 mod trap;
@@ -28,7 +31,14 @@ extern crate alloc;
 #[no_mangle]
 pub extern "C" fn _init(hartid: usize, dtb: *const u8) -> ! {
     printk!("{} has been selected to be the master core.\n", hartid);
-    let virtio_mmio2 = VirtioBlkMMIODeivce::mmio_init(0x1000_2000, 0x1000);
-    printk!("virtio_mmio2 network device initialized\n");
+    mm::init();
+    trap::init();
+    unsafe {
+        let t1 = *unsafe { 0xa0000000 as *const u32 };
+    }
+    proc::init();
+    fs::init();
+    // then start to schedule
+
     crate::arch::rv64::sbi::sbi_shutdown();
 }

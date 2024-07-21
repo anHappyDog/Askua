@@ -53,6 +53,24 @@ impl Sstatus {
         value &= !Self::SIE;
         Self::write(value);
     }
+    pub fn set_sie() {
+        let mut value = Self::read();
+        value |= Self::SIE;
+        Self::write(value);
+    }
+}
+
+impl Scause {
+    #[cfg(target_arch = "riscv64")]
+    pub fn instr_bit() -> usize {
+        Self::read() >> 63
+    }
+    pub fn exc_code() -> usize {
+        Self::read() & ((1 << 63) - 1)
+    }
+    pub fn is_instr() -> bool {
+        Self::instr_bit() == 1
+    }
 }
 
 pub fn ecall(a0: usize, a1: usize, a2: usize, a3: usize, a4: usize, a5: usize, a7: usize) -> usize {

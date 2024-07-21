@@ -36,13 +36,14 @@ SECTIONS {
 	.stack (NOLOAD) : {
         *(.bss.stack)
     }
-
+    .heap (NOLOAD) : {
+        *(.bss.heap)
+    }
     PROVIDE(_sbss = .);
     .bss : {
         *(.bss .bss.*)
 		*(.sbss .sbss.*)
     	PROVIDE(_ebss = .);
     }
-
     PROVIDE(_ekernel = .);
 }

@@ -1,6 +1,7 @@
+pub mod ipc;
 pub mod scheduler;
+pub mod thread;
 
+struct Task {}
 
-struct Task {
-
-}
+pub(super) fn init() {}

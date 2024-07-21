@@ -13,3 +13,11 @@ boot_stack:
     .space 131072 * 4
 .global boot_stack_top
 boot_stack_top:
+
+
+.section .bss.heap
+.globl kernel_heap
+kernel_heap:
+	.space 4096 * 8192
+.global kernel_heap_top
+kernel_heap_top:

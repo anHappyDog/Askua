@@ -14,6 +14,7 @@ impl TableLevel for TableLevel1 {}
 impl TableLevel for TableLevel2 {}
 impl TableLevel for TableLevel3 {}
 
+#[derive(Clone, Copy)]
 pub struct TableEntry(usize);
 
 impl TableEntry {
@@ -53,6 +54,10 @@ where
     L: TableLevel,
 {
     fn new() -> Box<Self> {
+        let mut table = Box::new(Self {
+            level: PhantomData,
+            entries: [TableEntry::zero(); ENTRIES_PER_TABLE],
+        });
         todo!()
     }
 }

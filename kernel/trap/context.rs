@@ -11,8 +11,19 @@
 // x12 - x17: a2 - a7 (函数参数)
 // x18 - x27: s2 - s11 (被调用者保存寄存器)
 // x28 - x31: t3 - t6 (临时/可用于调用者保存的寄存器)
-pub struct Context {
-    regs: [usize; 32],
+pub struct KernelContext {
+    regs: [usize; 31],
+}
+
+// u64 kernel_satp;  // 保存内核页表
+// u64 trap_handler; // 内核态异常针对用户异常的处理函数（C函数）
+// u64 epc;	  // 用户的epc
+// u64 hartid;	  // 当前的hartid，取自tp寄存器
+pub struct UserContext {
+    regs: [usize; 31],
+    ksp: usize,
+    kstap: usize,
+    trap_handler: usize,
     epc: usize,
-    
+    hartid: usize,
 }

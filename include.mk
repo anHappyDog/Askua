@@ -9,7 +9,7 @@ NCORE       ?= 4
 ROOT_FSIMG  := ext4-fs.img
 FSTYPE 		:= ext4
 
-QEMU_NETDEV="type=tap,script=./scripts/ifup.sh,downscript=./scripts/ifdown.sh"
+QEMU_NETDEV=type=tap,script=./scripts/ifup.sh,downscript=./scripts/ifdown.sh
 
 CROSS_COMPILE   := riscv64-unknown-elf-
 QEMU_FLAGS      := -smp $(NCORE) -m $(MEMORY) -nographic \

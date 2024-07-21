@@ -1,4 +1,4 @@
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec::Vec};
 
 use crate::driver::{
     virtio::{
@@ -11,7 +11,7 @@ use crate::driver::{
             },
             VirtioMMIODeivce,
         },
-        virtq::VIRTQ_DESC_LIST_LENGTH,
+        virtq::{Virtq, VIRTQ_DESC_LIST_LENGTH},
         ACKNOWLEDGE, DRIVER, DRIVER_OK, FEATURE_OK,
     },
     Device,
@@ -23,6 +23,7 @@ pub struct VirtioNetMMIODeivce {
     base: usize,
     size: usize,
     cfg: Option<VirtioNetConfig>,
+    vqs: Vec<Virtq>,
 }
 
 impl Device for VirtioNetMMIODeivce {
@@ -74,6 +75,7 @@ impl VirtioMMIODeivce for VirtioNetMMIODeivce {
             base,
             size,
             cfg: None,
+            vqs: Vec::new(),
         });
         device.check_magic()?;
         if device.read_volatile::<u32>(MMIO_DEVICE_ID_OFFSET) != DEVICE_ID_NETWORK {
