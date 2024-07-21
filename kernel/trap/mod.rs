@@ -32,7 +32,18 @@ fn reserved_trap(context: &mut context::Context) {}
 #[cfg(target_arch = "riscv64")]
 fn trap_init() {}
 
+#[cfg(target_arch = "riscv64")]
 #[no_mangle]
-extern "C" fn trap_handler(context: &mut context::Context) {
-    
-}
+extern "C" fn ktrap(context: &mut context::Context) {}
+
+#[cfg(target_arch = "riscv64")]
+#[no_mangle]
+extern "C" fn krettrap(context: &mut context::Context) {}
+
+#[cfg(target_arch = "riscv64")]
+#[no_mangle]
+extern "C" fn utrap(context: &mut context::Context) {}
+
+#[cfg(target_arch = "riscv64")]
+#[no_mangle]
+extern "C" fn urettrap(context: &mut context::Context) {}
