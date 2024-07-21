@@ -21,6 +21,5 @@ extern crate alloc;
 #[no_mangle]
 pub extern "C" fn _init(hartid: usize, dtb: *const u8) -> ! {
     printk!("{} has been selected to be the master core.\n", hartid);
-
-    loop {}
+    crate::arch::rv64::sbi::sbi_shutdown();
 }
