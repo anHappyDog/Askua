@@ -13,4 +13,7 @@ impl BuddyAllocator {
     pub(super) fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         todo!()
     }
+    pub(super) fn init(start: usize, end: usize) -> Self {
+        todo!()
+    }
 }

@@ -9,9 +9,12 @@ NCORE       ?= 4
 ROOT_FSIMG  := ext4-fs.img
 FSTYPE 		:= ext4
 
+QEMU_NETDEV="type=tap,script=./scripts/ifup.sh,downscript=./scripts/ifdown.sh"
+
 CROSS_COMPILE   := riscv64-unknown-elf-
 QEMU_FLAGS      := -smp $(NCORE) -m $(MEMORY) -nographic \
                     -device virtio-blk-device,drive=hd0,bus=virtio-mmio-bus.0 \
+					-netdev ${QEMU_NETDEV},id=net0 -device virtio-net-device,netdev=net0 \
                  -global virtio-mmio.force-legacy=true -drive if=none,file=fs/$(ROOT_FSIMG),format=raw,id=hd0 -M virt
 LDFLAGS         := -EL -m elf64lriscv -static -n -nostdlib --relax  -z max-page-size=4096
 CFLAGS          += --std=gnu99 -mcmodel=medany -ffreestanding -fno-stack-protector -fno-builtin \

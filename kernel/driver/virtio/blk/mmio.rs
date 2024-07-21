@@ -4,55 +4,30 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use super::{
-    VirtioBlkConfig, VirtioBlkDevice, VirtqBlkReq, VIRTIO_BLK_F_MQ, VIRTIO_BLK_F_RO,
-    VIRTIO_BLK_T_IN, VIRTIO_F_EVENT_IDX, VIRTIO_F_INDIRECT_DESC, VIRTIO_F_NOTIFICATION_DATA,
-    VIRTIO_F_RING_PACKED,
+    VirtioBlkConfig, VirtioBlkDevice, VirtqBlkReq, DEVICE_ID_BLOCK, VIRTIO_BLK_F_MQ,
+    VIRTIO_BLK_F_RO, VIRTIO_BLK_T_IN, VIRTIO_F_EVENT_IDX, VIRTIO_F_INDIRECT_DESC,
+    VIRTIO_F_NOTIFICATION_DATA, VIRTIO_F_RING_PACKED,
 };
 use crate::driver::virtio::blk::{VIRTIO_BLK_S_OK, VIRTIO_BLK_T_OUT};
+use crate::driver::virtio::mmio::consts::{
+    MMIO_DEVICE_FEATURES_OFFSET, MMIO_DEVICE_FEATURES_SEL_OFFSET, MMIO_DEVICE_ID_OFFSET,
+    MMIO_DRIVER_FEATURES_OFFSET, MMIO_DRIVER_FEATURES_SEL_OFFSET, MMIO_GUEST_PAGE_SIZE_OFFSET,
+    MMIO_MAGIC_OFFSET, MMIO_QUEUE_ALIGN_OFFSET, MMIO_QUEUE_DESC_HIGH_OFFSET,
+    MMIO_QUEUE_DESC_LOW_OFFSET, MMIO_QUEUE_DEVICE_HIGH_OFFSET, MMIO_QUEUE_DEVICE_LOW_OFFSET,
+    MMIO_QUEUE_DRIVER_HIGH_OFFSET, MMIO_QUEUE_DRIVER_LOW_OFFSET, MMIO_QUEUE_NOTIFY_OFFSET,
+    MMIO_QUEUE_NUM_MAX_OFFSET, MMIO_QUEUE_NUM_OFFSET, MMIO_QUEUE_PFN_OFFSET,
+    MMIO_QUEUE_READY_OFFSET, MMIO_QUEUE_SEL_OFFSET, MMIO_STATUS_OFFSET, MMIO_VERSION_OFFSET,
+    VIRTIO_BLK_LEGACY_VERSION, VIRTIO_BLK_MODERN_VERSION, VIRTIO_MMIO_MAGIC,
+};
+use crate::driver::virtio::mmio::VirtioMMIODeivce;
 use crate::driver::virtio::virtq::{
     Virtq, VIRTQ_AVAIL_F_NO_INTERRUPT, VIRTQ_DESC_F_NEXT, VIRTQ_DESC_F_WRITE,
     VIRTQ_DESC_LIST_LENGTH,
 };
 use crate::driver::virtio::{ACKNOWLEDGE, DRIVER, DRIVER_OK, FEATURE_OK};
-use crate::driver::{virtio::VirtioMMIODeivce, Device};
+use crate::driver::Device;
 use crate::mm::page::PAGE_SIZE;
 use crate::printk;
-
-const VIRTIO_MMIO_MAGIC: u32 = 0x74726976;
-
-const MMIO_MAGIC_OFFSET: usize = 0x0;
-const MMIO_VERSION_OFFSET: usize = 0x4;
-const MMIO_DEVICE_ID_OFFSET: usize = 0x8;
-const MMIO_VENDOR_ID_OFFSET: usize = 0xc;
-const MMIO_DEVICE_FEATURES_OFFSET: usize = 0x10;
-const MMIO_DEVICE_FEATURES_SEL_OFFSET: usize = 0x14;
-const MMIO_DRIVER_FEATURES_OFFSET: usize = 0x20;
-const MMIO_DRIVER_FEATURES_SEL_OFFSET: usize = 0x24;
-const MMIO_GUEST_PAGE_SIZE_OFFSET: usize = 0x28;
-const MMIO_QUEUE_SEL_OFFSET: usize = 0x30;
-const MMIO_QUEUE_NUM_MAX_OFFSET: usize = 0x34;
-const MMIO_QUEUE_NUM_OFFSET: usize = 0x38;
-const MMIO_QUEUE_ALIGN_OFFSET: usize = 0x3c;
-const MMIO_QUEUE_PFN_OFFSET: usize = 0x40;
-const MMIO_QUEUE_READY_OFFSET: usize = 0x44;
-const MMIO_QUEUE_NOTIFY_OFFSET: usize = 0x50;
-const MMIO_INTERRUPT_STATUS_OFFSET: usize = 0x60;
-const MMIO_INTERRUPT_ACK_OFFSET: usize = 0x64;
-const MMIO_STATUS_OFFSET: usize = 0x70;
-const MMIO_QUEUE_DESC_LOW_OFFSET: usize = 0x80;
-const MMIO_QUEUE_DESC_HIGH_OFFSET: usize = 0x84;
-const MMIO_QUEUE_DRIVER_LOW_OFFSET: usize = 0x90;
-const MMIO_QUEUE_DRIVER_HIGH_OFFSET: usize = 0x94;
-const MMIO_QUEUE_DEVICE_LOW_OFFSET: usize = 0xa0;
-const MMIO_QUEUE_DEVICE_HIGH_OFFSET: usize = 0xa4;
-const MMIO_SHMSEL_OFFSET: usize = 0xac;
-const MMIO_SHMLEN_LOW_OFFSET: usize = 0xb0;
-const MMIO_SHMLEN_HIGH_OFFSET: usize = 0xb4;
-const MMIO_SHMBASE_LOW_OFFSET: usize = 0xb8;
-const MMIO_SHMBASE_HIGH_OFFSET: usize = 0xbc;
-const MMIO_QUEUE_RST_OFFSET: usize = 0xc0;
-const MMIO_CONFIG_GEN_OFFSET: usize = 0xfc;
-const MMIO_CONFIG_OFFSET: usize = 0x100;
 
 // when mount the device, you should wrap this with the lock.
 pub struct VirtioBlkMMIODeivce {
@@ -236,7 +211,11 @@ impl VirtioMMIODeivce for VirtioBlkMMIODeivce {
             cfg: None,
         });
         device.check_magic()?;
+        if device.read_volatile::<u32>(MMIO_DEVICE_ID_OFFSET) != DEVICE_ID_BLOCK {
+            return Err("the device is not a block device.");
+        }
         let version = device.read_volatile::<u32>(MMIO_VERSION_OFFSET);
+
         device.write_volatile::<u32>(MMIO_STATUS_OFFSET, status);
         status |= ACKNOWLEDGE;
         device.write_volatile::<u32>(MMIO_STATUS_OFFSET, status);
@@ -283,6 +262,3 @@ impl VirtioMMIODeivce for VirtioBlkMMIODeivce {
         Ok(device)
     }
 }
-
-const VIRTIO_BLK_LEGACY_VERSION: u32 = 1;
-const VIRTIO_BLK_MODERN_VERSION: u32 = 2;

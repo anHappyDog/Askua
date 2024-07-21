@@ -10,6 +10,8 @@ use preheap::PreHeapPolicy;
 
 use crate::lock::{irq_safe::spin::IrqSafeSpinlock, spin::Spinlock};
 
+use super::{page::PAGE_SIZE, table::{self, TableLevel1}};
+
 pub(self) trait Allocator {}
 
 pub enum HeapPolicy {
@@ -39,7 +41,7 @@ pub(super) struct NormalHeapPolicy {
 
 impl NormalHeapPolicy {
     fn alloc(&self, layout: Layout) -> *mut u8 {
-        if layout.size() <= 4096 {
+        if layout.size() <= PAGE_SIZE {
             self.slab_allocator.lock().alloc(layout)
         } else {
             self.buddy_allocator.lock().alloc(layout)
@@ -84,3 +86,11 @@ impl Heap {
 
 #[global_allocator]
 static HEAP: Heap = Heap::new();
+
+pub fn init() -> table::PageTable<TableLevel1> {
+    // create the frame list,which is used for the allocator's dealloc and alloc
+    // create the normal heap policy and change 
+    // the map the kenerl heap and return the PageTable.
+
+    todo!()
+}

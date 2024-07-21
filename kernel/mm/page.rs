@@ -1,5 +1,9 @@
 use core::marker::PhantomData;
 
+use alloc::vec::Vec;
+
+use crate::lock::irq_safe::spin::IrqSafeSpinlock;
+
 pub trait PageSize {}
 
 pub struct Page4K;
@@ -24,5 +28,14 @@ pub struct Page<T: PageSize> {
     size: PhantomData<T>,
 }
 
+lazy_static::lazy_static! {
+    pub static ref FRAME4K_LIST : IrqSafeSpinlock<Vec<Frame<Page4K>>> = frame4k_init();
+}
 
-pub const PAGE_SIZE : usize = 4096;
+fn frame4k_init() -> IrqSafeSpinlock<Vec<Frame<Page4K>>> {
+    todo!()
+}
+
+
+
+pub const PAGE_SIZE: usize = 4096;

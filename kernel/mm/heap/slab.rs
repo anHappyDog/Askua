@@ -9,6 +9,9 @@ pub(super) struct SlabAllocator {}
 impl Allocator for SlabAllocator {}
 
 impl SlabAllocator {
+    pub(super) fn init(start: usize, end: usize) -> Self {
+        todo!()
+    }
     pub(super) fn alloc(&self, layout: Layout) -> *mut u8 {
         todo!()
     }
