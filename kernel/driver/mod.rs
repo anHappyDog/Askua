@@ -1,7 +1,7 @@
 use core::ops::Add;
 
-use alloc::{boxed::Box, sync::Arc, vec::Vec};
-use virtio::{blk::VirtioBlkDevice, mmio::VirtioMMIODeivce};
+use alloc::{boxed::Box, collections::BTreeMap, sync::Arc, vec::Vec};
+use virtio::{blk::VirtioBlkDevice, mmio::VirtioMMIODeivce, net::VirtioNetDevice};
 
 use crate::lock::irq_safe::spin::IrqSafeSpinlock;
 
@@ -18,7 +18,14 @@ enum BlockDevice {
     VirtioBlk(Arc<IrqSafeSpinlock<Box<dyn VirtioBlkDevice>>>),
 }
 
-static BLOCK_DEVICES: IrqSafeSpinlock<Vec<BlockDevice>> = IrqSafeSpinlock::new(Vec::new());
+enum NetDevice {
+    VirtioNet(Arc<IrqSafeSpinlock<Box<dyn VirtioNetDevice>>>),
+}
+
+static BLOCK_DEVICES: IrqSafeSpinlock<BTreeMap<usize, BlockDevice>> =
+    IrqSafeSpinlock::new(BTreeMap::new());
+static NET_DEVICES: IrqSafeSpinlock<BTreeMap<usize, BlockDevice>> =
+    IrqSafeSpinlock::new(BTreeMap::new());
 
 pub trait Device {
     fn read_volatile<T>(&self, offset: usize) -> T
@@ -28,10 +35,5 @@ pub trait Device {
 }
 
 pub fn dev_init() {
-    BLOCK_DEVICES
-        .lock()
-        .push(BlockDevice::VirtioBlk(Arc::new(IrqSafeSpinlock::new(
-            virtio::blk::mmio::VirtioBlkMMIODeivce::mmio_init(0x10001000, 0x1000).expect("sa"),
-        ))));
     
 }

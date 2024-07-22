@@ -36,6 +36,6 @@ fn frame4k_init() -> IrqSafeSpinlock<Vec<Frame<Page4K>>> {
     todo!()
 }
 
-
-
 pub const PAGE_SIZE: usize = 4096;
+pub const PAGE_2M_SIZE: usize = 2 * 1024 * 1024;
+pub const PAGE_1G_SIZE: usize = 1024 * 1024 * 1024;

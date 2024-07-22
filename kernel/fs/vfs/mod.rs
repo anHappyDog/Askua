@@ -1,5 +1,5 @@
 pub mod dentry;
-mod file;
+pub(super) mod file;
 mod file_system;
 pub(super) mod inode;
 mod mount;

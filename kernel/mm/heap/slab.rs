@@ -1,15 +1,23 @@
 use core::alloc::Layout;
 
-use super::Allocator;
+use alloc::sync::Arc;
+
+use crate::lock::irq_safe::spin::IrqSafeSpinlock;
+
+use super::{buddy, Allocator};
 
 // provide
+struct SlabSlot {}
 
-pub(super) struct SlabAllocator {}
+pub(crate) struct SlabAllocator {
+    start: usize,
+    end: usize,
+}
 
 impl Allocator for SlabAllocator {}
 
 impl SlabAllocator {
-    pub(super) fn init(start: usize, end: usize) -> Self {
+    pub(crate) fn init(start: usize, end: usize) -> Self {
         todo!()
     }
     pub(super) fn alloc(&self, layout: Layout) -> *mut u8 {
